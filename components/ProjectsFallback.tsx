@@ -6,7 +6,7 @@ import { RollButton } from "./RollButton";
 export default function ProjectsFallback() {
   return (
     <>
-      <section className="bg-[#0a0a0a] px-[2.8vw] py-16 text-white">
+      <section id="projects" className="bg-[#0a0a0a] px-[2.8vw] py-16 text-white">
         <ul className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2">
           {projects.map((p) => (
             <li key={p.slug}>
@@ -20,7 +20,7 @@ export default function ProjectsFallback() {
         </ul>
       </section>
       <div className="bg-[#f4f4f4] text-[#111]">
-        <section className="px-[2.8vw] py-16">
+        <section id="about" className="px-[2.8vw] py-16">
           <h2 className="text-[max(30px,4.6vw)] font-normal leading-[1.1]">What I do</h2>
           <ul className="mt-6 text-[max(18px,1.7vw)] leading-[1.3]">
             {["Design Engineer", "Software Developer", "Cybersecurity Researcher", "Freelancer"].map((r) => (

@@ -207,7 +207,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
     );
 
   return (
-    <div ref={wrap} className="relative h-[1300vh]" style={{ background: "#f4f4f4" }}>
+    <div ref={wrap} data-pinned className="relative h-[1300vh]" style={{ background: "#f4f4f4" }}>
       <div ref={stage} className="sticky top-0 h-screen overflow-clip">
         <div ref={sky} data-gate className="pointer-events-none absolute inset-0 opacity-0">
           <PixelSky play={play} calm />
