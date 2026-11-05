@@ -33,12 +33,13 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
     <section ref={root} className="relative h-screen w-full overflow-hidden text-[color:var(--fg,#111)]">
       <PixelSky play={play} />
 
-      {/* name: two lines in the bottom-left corner, clear of the pile */}
-      <div data-exit className="absolute bottom-0 left-0 z-0 overflow-hidden px-[2.8vw] pb-[1.2vw]" style={vis}>
-        <h1 data-name className="text-[8vw] font-normal leading-[0.88] whitespace-nowrap">
-          Vaibhav
-          <br />
-          Tomar
+      {/* giant name, behind the pile */}
+      <div data-exit className="absolute inset-x-0 bottom-0 z-0 overflow-hidden px-[2.8vw] pb-[1.2vw]" style={vis}>
+        <h1
+          data-name
+          className="text-[11.5vw] font-normal leading-[0.8] whitespace-nowrap"
+        >
+          Vaibhav Tomar
         </h1>
       </div>
 
