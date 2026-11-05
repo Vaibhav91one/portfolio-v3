@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-const TONES = ["#ebebeb", "#dedede", "#cdcdcd"]; // on the #f4f4f4 paper: level 0 is the paper itself
+const TONES = ["rgba(255,203,98,.30)", "rgba(255,160,58,.42)", "rgba(244,110,32,.55)"]; // warm, translucent: they tint the glow behind; level 0 is clear
 const FPS = 20; // the drift is slow; no need to redraw at display rate
 const hash = (x: number, y: number, z: number) => {
   const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
@@ -56,7 +56,7 @@ export default function PixelSky({ play }: { play: boolean }) {
       c.fillRect(4, 4, 4, 4);
       return ctx.createPattern(t, "repeat")!;
     };
-    const paper = "#f4f4f4";
+    const paper = "rgba(0,0,0,0)";
     const checks = [pair(paper, TONES[0]), pair(TONES[0], TONES[1]), pair(TONES[1], TONES[2])];
 
     const size = () => {
@@ -118,6 +118,14 @@ export default function PixelSky({ play }: { play: boolean }) {
 
   return (
     <div ref={wrap} data-fade aria-hidden className="pointer-events-none absolute inset-0 z-0">
+      {/* soft orange-yellow glow, bottom-weighted; the pixel clouds below tint over it */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(60vw 50vh at 88% 105%, rgba(255,150,40,.55), transparent 70%), radial-gradient(55vw 45vh at 8% 100%, rgba(255,205,80,.55), transparent 70%), radial-gradient(40vw 30vh at 95% 0%, rgba(255,214,102,.35), transparent 70%)",
+        }}
+      />
       <canvas
         ref={cv}
         className={`h-full w-full transition-opacity duration-[1600ms] ease-[cubic-bezier(0.23,1,0.32,1)] ${play ? "opacity-100" : "opacity-0"}`}

@@ -37,7 +37,7 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
       <div data-exit className="absolute inset-x-0 bottom-0 z-0 overflow-hidden px-[2.8vw] pb-[1.2vw]" style={vis}>
         <h1
           data-name
-          className="text-[11.5vw] font-normal leading-[0.8] whitespace-nowrap"
+          className="name-grad text-[11.5vw] font-normal leading-[0.8] whitespace-nowrap"
         >
           Vaibhav Tomar
         </h1>

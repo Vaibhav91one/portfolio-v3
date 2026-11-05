@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Helvetica, Arial, sans-serif; /* same stack as the original site */
 }
+
+/* Hero name: ink that warms to orange-yellow toward the right, drifting slowly */
+.name-grad {
+  background: linear-gradient(100deg, #111 0%, #111 38%, #e8590c 68%, #f5a524 85%, #111 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: name-drift 14s ease-in-out infinite alternate;
+}
+@keyframes name-drift {
+  to { background-position: 100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .name-grad { animation: none; }
+}
