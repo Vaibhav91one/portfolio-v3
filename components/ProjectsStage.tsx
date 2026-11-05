@@ -72,10 +72,10 @@ const FRAG = /* glsl */ `
 
 const SLOT = [0, 0, 1, 2, 2, 3, 3]; // panel -> art slot
 const ART = [
-  { src: "/preloader/9.jpg", tint: "#5a9a5f" },
-  { src: "/preloader/10.jpg", tint: "#dfa23a" },
-  { src: "/preloader/11.jpg", tint: "#6d9ff0" },
-  { src: "/preloader/12.jpg", tint: "#d96aa7" },
+  { src: "/preloader/9.webp", tint: "#5a9a5f" },
+  { src: "/preloader/10.webp", tint: "#dfa23a" },
+  { src: "/preloader/11.webp", tint: "#6d9ff0" },
+  { src: "/preloader/12.webp", tint: "#d96aa7" },
 ];
 const ART_W = 56;
 const ART_H = 47; // the slot window's aspect (about 1.19)
@@ -266,7 +266,7 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
 
     layout();
     (async () => {
-      const fronts = [...stack, "/hero.jpg"]; // bottom to top of the pile
+      const fronts = [...stack, "/hero.webp"]; // bottom to top of the pile
       const [frontTex, posterTex, artCv] = await Promise.all([
         Promise.all(fronts.map(load)),
         Promise.all(projects.map((p) => load(p.poster))),

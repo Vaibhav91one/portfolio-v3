@@ -43,11 +43,11 @@ export default function Roles({ box, bio, tags }: { box: RefObject<HTMLDivElemen
         {slots.map((s, i) => (
           <p
             key={i}
-            aria-label={ROLES[i]}
             className="absolute flex items-center justify-center px-[4%] text-center text-[max(18px,2.4vw)] font-normal leading-[1.25]"
             style={{ left: s.win.cx - s.win.w / 2, top: s.win.cy - s.win.h / 2, width: s.win.w, height: s.win.h, transform: `rotate(${s.rot}deg)` }}
           >
-            <span>
+            <span className="sr-only">{ROLES[i]}</span>
+            <span aria-hidden>
               <Chars text={ROLES[i]} bg="bg-white" />
             </span>
           </p>

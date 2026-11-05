@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { HERO_POSE, POSES, RAMP, cardSize } from "./stack";
 
-const IMAGES = Array.from({ length: 12 }, (_, i) => `/preloader/${i + 1}.jpg`);
-const HERO = "/hero.jpg"; // the last frame of the trail: dropped at the centre, then settles on top of the pile
+const IMAGES = Array.from({ length: 12 }, (_, i) => `/preloader/${i + 1}.webp`);
+const HERO = "/hero.webp"; // the last frame of the trail: dropped at the centre, then settles on top of the pile
 const MAX_IMAGES = 8; // visible at once
 const STEP_PX = 120; // cursor travel between two images
 const PATH_S = 6; // seconds the fake cursor takes: loop around the corners, then spiral into the centre
