@@ -55,14 +55,17 @@ const FRAG = /* glsl */ `
     float u = y - uSlide;
     vec4 a = texture2D(uFront, (vec2(vUv.x, u) - 0.5) * uFrontUv + 0.5);
     vec4 b = texture2D(uBack, (vec2(vUv.x, u + 1.0) - 0.5) * uBackUv + 0.5);
-    return u >= 0.0 ? a : b;
+    // at rest (slide 0 or 1) the panel edge sits exactly on the seam: float error flips edge pixels to the other layer and draws a dashed line, so the seam is nudged off the edge toward the layer on show
+    float e = uSlide < 0.001 ? -0.003 : (uSlide > 0.999 ? 0.003 : 0.0);
+    return u >= e ? a : b;
   }
   void main() {
     // the same trick once more: the video strip slides up out of the window while the pixel art enters from below
     float v = vUv.y - uArtSlide;
     vec4 cur = base(v);
     vec4 art = texture2D(uArt, (vec2(vUv.x, v + 1.0) - 0.5) * uArtUv + 0.5);
-    vec4 c = v >= 0.0 ? cur : art;
+    float e = uArtSlide < 0.001 ? -0.003 : (uArtSlide > 0.999 ? 0.003 : 0.0);
+    vec4 c = v >= e ? cur : art;
     gl_FragColor = vec4(c.rgb, 1.0); // raw sRGB in, raw sRGB out: same as <img>/<video>, and no double encode on video
   }
 `;
