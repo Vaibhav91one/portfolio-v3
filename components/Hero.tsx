@@ -34,8 +34,8 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
     <section ref={root} className="relative h-screen w-full overflow-hidden text-[color:var(--fg,#111)]">
       <PixelSky play={play} />
 
-      {/* giant name, behind the pile */}
-      <div data-exit className="absolute inset-x-0 bottom-0 z-0 overflow-hidden px-[2.8vw] pb-[1.2vw]" style={vis}>
+      {/* giant name marquee, vertically centred behind the pile (box = one text line, 11.5vw * 0.8) */}
+      <div data-exit className="absolute inset-x-0 top-[calc(50%-4.6vw)] z-0 overflow-hidden px-[2.8vw]" style={vis}>
         <h1 className="sr-only">Vaibhav Tomar</h1>
         <NameMarquee />
       </div>
@@ -69,7 +69,7 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
         <p data-in data-exit className="absolute right-[2.8vw] top-[66vh] text-[max(20px,2.4vw)] font-normal leading-none">
           © 2026
         </p>
-        <p data-in data-exit className="absolute bottom-[19vh] right-[2.8vw] text-[max(13px,1.05vw)] font-normal uppercase leading-none">
+        <p data-in data-exit className="absolute bottom-[3vh] right-[2.8vw] text-[max(13px,1.05vw)] font-normal uppercase leading-none">
           <span className="mr-2 text-black/45">India</span>
           <Clock />
         </p>
