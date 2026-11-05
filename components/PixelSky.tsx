@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-const TONES = ["rgba(255,203,98,.30)", "rgba(255,160,58,.42)", "rgba(244,110,32,.55)"]; // warm, translucent: they tint the glow behind; level 0 is clear
+const TONES = ["rgba(255,203,98,.26)", "rgba(255,150,50,.40)"]; // warm, translucent: they tint the glow behind; level 0 is clear
 const FPS = 20; // the drift is slow; no need to redraw at display rate
 const hash = (x: number, y: number, z: number) => {
   const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
@@ -57,12 +57,12 @@ export default function PixelSky({ play }: { play: boolean }) {
       return ctx.createPattern(t, "repeat")!;
     };
     const paper = "rgba(0,0,0,0)";
-    const checks = [pair(paper, TONES[0]), pair(TONES[0], TONES[1]), pair(TONES[1], TONES[2])];
+    const checks = [pair(paper, TONES[0]), pair(TONES[0], TONES[1])];
 
     const size = () => {
       W = canvas.width = window.innerWidth;
       H = canvas.height = window.innerHeight;
-      CELL = W < 700 ? 16 : 24;
+      CELL = W < 700 ? 16 : 32;
     };
 
     const draw = (time: number) => {
@@ -75,20 +75,20 @@ export default function PixelSky({ play }: { play: boolean }) {
           // clear in the middle, building toward the edges and the bottom
           const dx = ((c + 0.5) / cols - 0.5) / 0.5;
           const dy = ((r + 0.5) / rows - 0.52) / 0.5;
-          const weight = edge(0.5, 1.15, Math.hypot(dx, dy * 1.1));
+          const weight = edge(0.75, 1.25, Math.hypot(dx, dy * 1.1));
           // clouds drift sideways and slowly morph
           const n = fbm(c * 0.075 + time * 0.12, r * 0.075, z);
-          const level = edge(0.37, 0.72, n) * weight * 3; // 0..3
+          const level = edge(0.45, 0.72, n) * weight * 2; // 0..2
           const base = Math.floor(level);
           const frac = level - base;
           const x = c * CELL;
           const y = r * CELL;
-          if (frac > 0.38 && frac < 0.62 && base < 3) {
+          if (frac > 0.38 && frac < 0.62 && base < 2) {
             ctx.fillStyle = checks[base]; // dither band between two tones
           } else {
             const tone = base + (frac >= 0.62 ? 1 : 0);
             if (tone === 0) continue;
-            ctx.fillStyle = TONES[Math.min(tone, 3) - 1];
+            ctx.fillStyle = TONES[Math.min(tone, 2) - 1];
           }
           ctx.fillRect(x, y, CELL, CELL);
         }
@@ -123,7 +123,7 @@ export default function PixelSky({ play }: { play: boolean }) {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(60vw 50vh at 88% 105%, rgba(255,150,40,.55), transparent 70%), radial-gradient(55vw 45vh at 8% 100%, rgba(255,205,80,.55), transparent 70%), radial-gradient(40vw 30vh at 95% 0%, rgba(255,214,102,.35), transparent 70%)",
+            "radial-gradient(60vw 50vh at 88% 105%, rgba(255,150,40,.38), transparent 70%), radial-gradient(55vw 45vh at 8% 100%, rgba(255,205,80,.38), transparent 70%)",
         }}
       />
       <canvas

@@ -54,11 +54,12 @@ export default function ProjectsUI({
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, COLS * CELL, ROWS * CELL);
-      ctx.fillStyle = "#fff";
       const front = p * (COLS + BAND);
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           const d = front - (c + 0.5 + ROW_SKEW[r]);
+          const k = c / (COLS - 1); // yellow -> orange along the bar
+          ctx.fillStyle = `rgb(${Math.round(255 - 11 * k)},${Math.round(203 - 93 * k)},${Math.round(98 - 66 * k)})`;
           const t = d >= BAND ? 1 : d <= 0 ? 0 : d / BAND; // 0 empty .. 1 solid
           // blocks on the front scale up and down, each on its own rhythm; solid and empty ones hold still
           const live = t > 0 && t < 1 && !still;
@@ -80,6 +81,7 @@ export default function ProjectsUI({
               ctx.fillRect(x0 + (sx / CELL) * size, y0 + (sy / CELL) * size, (sub / CELL) * size, (sub / CELL) * size);
             }
             if (t === 0) {
+              ctx.fillStyle = "#fff";
               ctx.globalAlpha = 0.22; // faint dot where the bar has not reached yet
               ctx.fillRect(c * CELL + sub / 2, r * CELL + sub / 2, sub, sub);
               ctx.globalAlpha = 1;
