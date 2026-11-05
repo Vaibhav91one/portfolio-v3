@@ -75,10 +75,15 @@ export default function PixelSky({ play }: { play: boolean }) {
           // clear in the middle, building toward the edges and the bottom
           const dx = ((c + 0.5) / cols - 0.5) / 0.5;
           const dy = ((r + 0.5) / rows - 0.52) / 0.5;
-          const weight = edge(0.75, 1.25, Math.hypot(dx, dy * 1.1));
+          const u = (c + 0.5) / cols;
+          const v = (r + 0.5) / rows;
+          const blob = (cx: number, cy: number, rx: number, ry: number) => 1 - edge(0.15, 1, Math.hypot((u - cx) / rx, (v - cy) / ry));
+          // corners, plus the sides: left a little below centre, right a little above, and a touch along the top
+          const sides = Math.max(blob(0, 0.6, 0.27, 0.22), blob(1, 0.4, 0.2, 0.2));
+          const weight = Math.max(edge(0.75, 1.25, Math.hypot(dx, dy * 1.1)), sides, blob(0.5, 0, 0.2, 0.12) * 0.8);
           // clouds drift sideways and slowly morph
           const n = fbm(c * 0.075 + time * 0.12, r * 0.075, z);
-          const level = edge(0.45, 0.72, n) * weight * 2; // 0..2
+          const level = edge(0.45, 0.72, n + sides * 0.22) * weight * 2; // 0..2
           const base = Math.floor(level);
           const frac = level - base;
           const x = c * CELL;
