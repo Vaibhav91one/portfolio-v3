@@ -4,10 +4,10 @@ const SIZE = "min(32vw, 60vh)"; // reach = half of this above the corner: stays 
 
 /**
  * The Mapinly asterisk as polished green metal, centred on the bottom-left corner so a quarter shows. The star shape
- * is a mask that turns; the chrome bands behind it stay put, so reflections slide across the arms as it rotates.
- * `box` is the corner wrapper (scaled by the scroll render, origin = the corner); the inner element fades in with `play`.
+ * is a mask that turns with scroll (`spin`, set from the scroll render: down = clockwise, up = anticlockwise); the chrome
+ * bands behind it stay put, so reflections slide across the arms as it rotates. `box` is the corner wrapper (scaled by the scroll render, origin = the corner); the inner element fades in with `play`.
  */
-export default function Asterisk({ play, box }: { play: boolean; box: RefObject<HTMLDivElement | null> }) {
+export default function Asterisk({ play, box, spin }: { play: boolean; box: RefObject<HTMLDivElement | null>; spin: RefObject<SVGGElement | null> }) {
   return (
     <div ref={box} aria-hidden className="pointer-events-none absolute bottom-0 left-0 z-0 size-0">
       <div className={`transition-opacity duration-[1600ms] ease-[cubic-bezier(0.23,1,0.32,1)] ${play ? "opacity-100" : "opacity-0"}`}>
@@ -34,7 +34,7 @@ export default function Asterisk({ play, box }: { play: boolean; box: RefObject<
               <stop offset="1" stopColor="#000" stopOpacity=".18" />
             </linearGradient>
             <mask id="ast-mask" maskUnits="userSpaceOnUse" x="-2" y="-2" width="18" height="18">
-              <g className="asterisk-spin">
+              <g ref={spin}>
                 <path
                   fill="#fff"
                   fillRule="evenodd"

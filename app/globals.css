@@ -24,16 +24,3 @@ body {
   color: var(--foreground);
   font-family: Helvetica, Arial, sans-serif; /* same stack as the original site */
 }
-
-/* Corner asterisk: a slow turn around its own centre, as on the Mapinly site */
-@keyframes asterisk-spin {
-  to { transform: rotate(360deg); }
-}
-.asterisk-spin {
-  animation: asterisk-spin 24s linear infinite;
-  transform-box: fill-box; /* SVG: turn around the shape's own centre */
-  transform-origin: center;
-}
-@media (prefers-reduced-motion: reduce) {
-  .asterisk-spin { animation: none; }
-}

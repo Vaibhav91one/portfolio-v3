@@ -39,6 +39,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
   const bar = useRef(0); // 0..1 through the carousel, read by the pixel bar
   const tag = useRef<HTMLDivElement>(null);
   const ast = useRef<HTMLDivElement>(null);
+  const spin = useRef<SVGGElement>(null);
   const ui = useRef<HTMLDivElement>(null);
   const [api, setApi] = useState<StageApi | null>(null);
   const [idx, setIdx] = useState(0);
@@ -63,6 +64,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
     const fades = st.querySelectorAll<HTMLElement>("[data-fade]"); // fade only (no slide): the pixel sky
     let shown = -1;
     let wasDark: boolean | undefined;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const update = (P: number) => {
       const on = P > 0.001; // first scroll: canvas takes over from the DOM pile in the same frame
@@ -88,6 +90,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
       const pos = carouselPos(P, projects.length);
       ui.current!.style.opacity = String(clamp01((P - 0.3) / 0.1));
       bar.current = projects.length > 1 ? pos / (projects.length - 1) : 1;
+      if (!still) spin.current!.setAttribute("transform", `rotate(${P * 1440} 7 7)`); // scroll down = clockwise, up = anticlockwise
       ast.current!.style.transform = `scale(${1 - 0.45 * ramp(clamp01((P - 0.1) / 0.3))})`; // shrinks into the corner so it stays clear of the carousel
       const tg = ramp(clamp01((P - 0.28) / 0.1)); // the corner is free once the bio has gone and the cards are dark
       tag.current!.style.opacity = String(tg);
@@ -141,7 +144,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
   return (
     <div ref={wrap} className="relative h-[800vh]" style={{ background: "#f4f4f4" }}>
       <div ref={stage} className="sticky top-0 h-screen overflow-clip">
-        <Asterisk play={play} box={ast} />
+        <Asterisk play={play} box={ast} spin={spin} />
         <Hero play={play} stack={stack} />
         {play && <ProjectsStage stack={stack} onReady={setApi} />}
         <SectionTag tag={tag} />
