@@ -8,7 +8,7 @@ export default function Footer() {
         <Identity />
         <Meta />
       </div>
-      <p className="absolute bottom-[3vh] right-[2.8vw] text-[max(12px,0.95vw)] opacity-50">&copy; 2026 Vaibhav Tomar</p>
+      <p className="absolute bottom-[3vh] right-[2.8vw] text-[max(12px,0.95vw)] opacity-50 max-sm:static max-sm:mt-8">&copy; 2026 Vaibhav Tomar</p>
     </section>
   );
 }

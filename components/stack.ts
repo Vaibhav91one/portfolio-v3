@@ -46,12 +46,12 @@ export type Slot = {
 /** The four stamp cards of the "Things I work on" section, shared by the DOM cards and the 3D panels that turn into them. */
 export const stampSlots = (W: number, H: number): Slot[] => {
   const phone = W < 700;
-  const w = phone ? W * 0.42 : W * 0.2;
+  const w = phone ? W * 0.42 : Math.min(W * 0.2, H * 0.36); // short landscape screens: tiles shrink with the height
   const h = w * 1.3;
   const gap = phone ? W * 0.05 : W * 0.025;
   const cols = phone ? 2 : 4;
   const left = (W - (cols * w + (cols - 1) * gap)) / 2;
-  const top = phone ? H * 0.34 : H * 0.64 - h / 2;
+  const top = phone ? H * 0.42 : H * 0.64 - h / 2;
   return [-1.5, 1.2, -0.8, 1.6].map((rot, i) => {
     const x = left + (i % cols) * (w + gap);
     const y = top + Math.floor(i / cols) * (h + gap);
