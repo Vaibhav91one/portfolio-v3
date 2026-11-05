@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import AnimatedParagraph from "./AnimatedParagraph";
 import Clock from "./Clock";
+import NameMarquee from "./NameMarquee";
 import Nav from "./Nav";
 import PixelSky from "./PixelSky";
 import { CARD_CLASS, HERO_POSE, POSES, STACK_CARD, poseTransform } from "./stack";
@@ -35,12 +36,8 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
 
       {/* giant name, behind the pile */}
       <div data-exit className="absolute inset-x-0 bottom-0 z-0 overflow-hidden px-[2.8vw] pb-[1.2vw]" style={vis}>
-        <h1
-          data-name
-          className="text-[11.5vw] font-normal leading-[0.8] whitespace-nowrap"
-        >
-          Vaibhav Tomar
-        </h1>
+        <h1 className="sr-only">Vaibhav Tomar</h1>
+        <NameMarquee />
       </div>
 
       {/* photo pile */}
@@ -72,7 +69,7 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
         <p data-in data-exit className="absolute right-[2.8vw] top-[66vh] text-[max(20px,2.4vw)] font-normal leading-none">
           © 2026
         </p>
-        <p data-in data-exit className="absolute bottom-[3vh] right-[2.8vw] text-[max(13px,1.05vw)] font-normal uppercase leading-none">
+        <p data-in data-exit className="absolute bottom-[19vh] right-[2.8vw] text-[max(13px,1.05vw)] font-normal uppercase leading-none">
           <span className="mr-2 text-black/45">India</span>
           <Clock />
         </p>
