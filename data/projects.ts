@@ -2,7 +2,7 @@ export type Project = {
   slug: string;
   title: string;
   link: string;
-  video: string; // mp4 in /public/projects (placeholder recordings until the real ones land)
+  video: string; // 60fps recording of the live site: node scripts/record.mjs <slug|all>
   poster: string;
 };
 
