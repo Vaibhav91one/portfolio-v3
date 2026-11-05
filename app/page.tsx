@@ -5,8 +5,8 @@ import Showcase from "@/components/Showcase";
 import SmoothScroll from "@/components/SmoothScroll";
 import Preloader from "@/components/Preloader";
 
-const KEY = "pv3-intro"; // sessionStorage: the preloader plays once per browser session
-const DEFAULT_STACK = ["/preloader/9.jpg", "/preloader/10.jpg", "/preloader/11.jpg", "/preloader/12.jpg"];
+const KEY = "pv3-intro-2"; // sessionStorage: the preloader plays once per browser session (renamed when the photos moved from .jpg to .webp, so old stored paths are ignored)
+const DEFAULT_STACK = ["/preloader/9.webp", "/preloader/10.webp", "/preloader/11.webp", "/preloader/12.webp"];
 
 type Boot = { first: boolean; stack: string[] };
 let boot: Boot | undefined; // read once per page load so every render agrees

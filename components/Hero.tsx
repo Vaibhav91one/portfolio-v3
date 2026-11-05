@@ -91,7 +91,7 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
           ))}
           <div className={`${STACK_CARD} ${CARD_CLASS}`} style={{ transform: poseTransform(HERO_POSE), zIndex: 10 }}>
             {/* eslint-disable-next-line @next/next/no-img-element -- must be pixel-identical to the Preloader's hero card */}
-            <img src="/hero.jpg" alt="Vaibhav Tomar" className="h-full w-full object-cover" />
+            <img src="/hero.webp" alt="Vaibhav Tomar" className="h-full w-full object-cover" />
           </div>
         </div>
         {fx && <Displacement host={root} paint={paintPile} onReady={() => setFxReady(true)} grid={40} threshold={300} strength={0.15} scramble={0} />}
