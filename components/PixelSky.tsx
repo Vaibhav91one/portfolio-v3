@@ -72,18 +72,14 @@ export default function PixelSky({ play }: { play: boolean }) {
       const z = time * 0.05;
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          // clear in the middle, building toward the edges and the bottom
-          const dx = ((c + 0.5) / cols - 0.5) / 0.5;
-          const dy = ((r + 0.5) / rows - 0.52) / 0.5;
           const u = (c + 0.5) / cols;
           const v = (r + 0.5) / rows;
           const blob = (cx: number, cy: number, rx: number, ry: number) => 1 - edge(0.15, 1, Math.hypot((u - cx) / rx, (v - cy) / ry));
-          // corners, plus the sides: left a little below centre, right a little above, and a touch along the top
-          const sides = Math.max(blob(0, 0.6, 0.27, 0.22), blob(1, 0.4, 0.2, 0.2));
-          const weight = Math.max(edge(0.75, 1.25, Math.hypot(dx, dy * 1.1)), sides, blob(0.5, 0, 0.2, 0.12) * 0.8);
+          // only two clusters: left, just above the name; right, just below the nav
+          const weight = Math.max(blob(0, 0.68, 0.17, 0.19), blob(1, 0.17, 0.13, 0.14));
           // clouds drift sideways and slowly morph
           const n = fbm(c * 0.075 + time * 0.12, r * 0.075, z);
-          const level = edge(0.45, 0.72, n + sides * 0.22) * weight * 2; // 0..2
+          const level = edge(0.45, 0.72, n + weight * 0.25) * weight * 2; // 0..2
           const base = Math.floor(level);
           const frac = level - base;
           const x = c * CELL;
@@ -128,7 +124,7 @@ export default function PixelSky({ play }: { play: boolean }) {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(60vw 50vh at 88% 105%, rgba(110,170,120,.34), transparent 70%), radial-gradient(55vw 45vh at 8% 100%, rgba(200,222,140,.4), transparent 70%)",
+            "radial-gradient(55vw 45vh at 8% 100%, rgba(200,222,140,.4), transparent 70%)",
         }}
       />
       <canvas
