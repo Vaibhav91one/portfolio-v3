@@ -98,15 +98,15 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
       </div>
 
       {/* text layer */}
-      <div className="absolute inset-0 z-20 px-[2.8vw] py-[3vh]" style={vis}>
-        <div data-exit>
+      <div className="pointer-events-none absolute inset-0 z-20 px-[2.8vw] py-[3vh]" style={vis}>
+        <div data-exit className="pointer-events-auto w-fit">
           <AnimatedParagraph
             text={BIO}
             play={play}
             className="max-w-[22vw] text-[max(15px,1.45vw)] font-normal leading-[1.25]"
           />
         </div>
-        <div data-in className="absolute right-[2.8vw] top-[3vh]">
+        <div data-in data-nav className="pointer-events-auto absolute right-[2.8vw] top-[3vh]">
           <Nav />
         </div>
         <p data-in data-exit className="absolute right-[2.8vw] top-[66vh] text-[max(20px,2.4vw)] font-normal leading-none">

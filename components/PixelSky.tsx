@@ -32,7 +32,7 @@ const edge = (a: number, b: number, v: number) => smooth(Math.min(1, Math.max(0,
  * the photo pile and text sit, stays clear paper. `wrap` is faded by the scroll render (data-fade); the canvas fades
  * in on its own once `play` is true.
  */
-export default function PixelSky({ play }: { play: boolean }) {
+export default function PixelSky({ play, calm = false }: { play: boolean; calm?: boolean }) {
   const wrap = useRef<HTMLDivElement>(null);
   const cv = useRef<HTMLCanvasElement>(null);
 
@@ -43,6 +43,7 @@ export default function PixelSky({ play }: { play: boolean }) {
     let W = 0;
     let H = 0;
     let CELL = 24;
+    const gate = canvas.closest<HTMLElement>("[data-gate]"); // an outer wrapper that fades the whole sky: stop drawing while it is hidden
 
     // 8x8 checker tiles (4px squares) for each pair of neighbouring tones; cell size is a multiple of 8 so they line up
     const pair = (a: string, b: string) => {
@@ -80,7 +81,7 @@ export default function PixelSky({ play }: { play: boolean }) {
           const blob = (cx: number, cy: number, rx: number, ry: number) => 1 - edge(0.15, 1, Math.hypot((u - cx) / rx, (v - cy) / ry));
           // corners, plus the sides: left a little below centre, right a little above, and a touch along the top
           const sides = Math.max(blob(0, 0.6, 0.27, 0.22), blob(1, 0.4, 0.2, 0.2));
-          const weight = Math.max(edge(0.75, 1.25, Math.hypot(dx, dy * 1.1)), sides, blob(0.5, 0, 0.2, 0.12) * 0.8);
+          const weight = (calm ? 0.55 : 1) * Math.max(edge(0.75, 1.25, Math.hypot(dx, dy * 1.1)), sides, blob(0.5, 0, 0.2, 0.12) * 0.8);
           // clouds drift sideways and slowly morph
           const n = fbm(c * 0.075 + time * 0.12, r * 0.075, z);
           const level = edge(0.45, 0.72, n + sides * 0.22) * weight * 2; // 0..2
@@ -106,7 +107,7 @@ export default function PixelSky({ play }: { play: boolean }) {
     const tick = (t: number) => {
       if (still || t - last < 1 / FPS) return;
       last = t;
-      if (+(wrap.current?.style.opacity ?? 1) < 0.01 || document.hidden) return; // scrolled away: stop drawing
+      if (Number(wrap.current?.style.opacity || 1) < 0.01 || Number(gate?.style.opacity || 1) < 0.01 || document.hidden) return; // "" (never set) counts as visible // scrolled away: stop drawing
       draw(t);
     };
     gsap.ticker.add(tick);
@@ -119,10 +120,10 @@ export default function PixelSky({ play }: { play: boolean }) {
       gsap.ticker.remove(tick);
       window.removeEventListener("resize", onResize);
     };
-  }, []);
+  }, [calm]);
 
   return (
-    <div ref={wrap} data-fade aria-hidden className="pointer-events-none absolute inset-0 z-0">
+    <div ref={wrap} {...(calm ? {} : { "data-fade": "" })} aria-hidden className="pointer-events-none absolute inset-0 z-0">
       {/* soft green glow, bottom-weighted; the pixel clouds below tint over it */}
       <div
         className="absolute inset-0"

@@ -13,7 +13,15 @@ const ITEMS = [
  * Nav with the original site's hover: the label rolls up and away in 3D while a copy rolls in from below.
  * Plays on hover/focus, reverses on leave/blur. Clicking scrolls to the section id.
  */
-export default function Nav() {
+export default function Nav({
+  label = "Main",
+  listClass = "flex items-center gap-[5vw]",
+  linkClass = "text-[max(14px,1.05vw)] uppercase",
+}: {
+  label?: string;
+  listClass?: string;
+  linkClass?: string;
+}) {
   const links = useRef<(HTMLAnchorElement | null)[]>([]);
 
   useEffect(() => {
@@ -51,8 +59,8 @@ export default function Nav() {
   }, []);
 
   return (
-    <nav aria-label="Main">
-      <ul className="flex items-center gap-[5vw]">
+    <nav aria-label={label}>
+      <ul className={listClass}>
         {ITEMS.map((item, i) => (
           <li key={item.id}>
             <a
@@ -63,7 +71,7 @@ export default function Nav() {
               }}
               ref={(el) => void (links.current[i] = el)}
               style={{ perspective: "380px" }}
-              className="relative flex flex-col items-center text-[max(14px,1.05vw)] font-normal uppercase leading-none outline-offset-4 focus-visible:outline-2"
+              className={`relative flex flex-col items-center font-normal leading-none outline-offset-4 focus-visible:outline-2 ${linkClass}`}
             >
               <span className="nav-text--base">{item.label}</span>
               <span className="nav-text--front absolute left-0 top-full opacity-0">{item.label}</span>

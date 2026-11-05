@@ -3,11 +3,12 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { projects } from "@/data/projects";
-import { CAROUSEL_AT, HERO_POSE, POSES, cardSize, carouselPos, ramp } from "./stack";
+import { ditherArt } from "./dither";
+import { CAROUSEL_AT, HERO_POSE, POSES, cardSize, carouselPos, ramp, stampSlots } from "./stack";
 
 export type StageApi = {
-  /** Draw the scene for scroll progress P (0..1). Pure function of P, so any frame can be redrawn. */
-  render: (P: number) => void;
+  /** Draw the scene for scroll progress P (0..1) and footer progress F (0..1: the carousel collapsing into a strip). Pure function of both, so any frame can be redrawn. */
+  render: (P: number, F?: number, hs?: number) => void;
   setVisible: (v: boolean) => void;
 };
 
@@ -44,18 +45,38 @@ const FRAG = /* glsl */ `
   uniform vec2 uFrontUv;
   uniform vec2 uBackUv;
   uniform float uSlide;
-  void main() {
+  uniform sampler2D uArt;
+  uniform vec2 uArtUv;
+  uniform float uArtSlide;
+  vec4 base(float y) {
     // photo and video are one vertical strip behind a fixed window: sliding it up pushes the photo out of the frame
     // while the video enters right behind it, so there is never a gap. Both samples are taken outside the branch so
     // the mip derivatives stay continuous across the seam.
-    float u = vUv.y - uSlide;
+    float u = y - uSlide;
     vec4 a = texture2D(uFront, (vec2(vUv.x, u) - 0.5) * uFrontUv + 0.5);
     vec4 b = texture2D(uBack, (vec2(vUv.x, u + 1.0) - 0.5) * uBackUv + 0.5);
-    vec4 c = u >= 0.0 ? a : b;
+    return u >= 0.0 ? a : b;
+  }
+  void main() {
+    // the same trick once more: the video strip slides up out of the window while the pixel art enters from below
+    float v = vUv.y - uArtSlide;
+    vec4 cur = base(v);
+    vec4 art = texture2D(uArt, (vec2(vUv.x, v + 1.0) - 0.5) * uArtUv + 0.5);
+    vec4 c = v >= 0.0 ? cur : art;
     gl_FragColor = vec4(c.rgb, 1.0); // raw sRGB in, raw sRGB out: same as <img>/<video>, and no double encode on video
   }
 `;
 
+const SLOT = [0, 0, 1, 2, 2, 3, 3]; // panel -> art slot
+const ART = [
+  { src: "/preloader/9.jpg", tint: "#5a9a5f" },
+  { src: "/preloader/10.jpg", tint: "#dfa23a" },
+  { src: "/preloader/11.jpg", tint: "#6d9ff0" },
+  { src: "/preloader/12.jpg", tint: "#d96aa7" },
+];
+const ART_W = 56;
+const ART_H = 47; // the slot window's aspect (about 1.19)
+const LEAD = [0, 2, 4, 6]; // the panel that fills each slot
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /** object-fit: cover as a uv scale around the centre */
@@ -69,6 +90,7 @@ type Panel = {
   video?: HTMLVideoElement;
   videoTex?: THREE.VideoTexture;
   posterTex: THREE.Texture;
+  artTex: THREE.CanvasTexture;
   wantPlay: boolean;
 };
 
@@ -96,6 +118,8 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
     let W = window.innerWidth;
     let H = window.innerHeight;
     let lastP = 0;
+    let lastF = 0;
+    let lastH = 0;
     let panels: Panel[] = [];
 
     const layout = () => {
@@ -129,26 +153,45 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
       v.src = projects[k].video;
       v.addEventListener("playing", () => {
         if (disposed || p.videoTex) return;
-        p.videoTex = new THREE.VideoTexture(v);
+        const tex = new THREE.VideoTexture(v);
+        p.videoTex = tex;
         p.backAspect = v.videoWidth / v.videoHeight || 1;
-        p.mesh.material.uniforms.uBack.value = p.videoTex; // poster until the first real frame
+        // poster until a few frames have really reached the texture: the first uploads can be half-decoded blocks and streaks
+        let frames = 0;
+        const show = () => {
+          if (disposed) return;
+          if (++frames < 4 && "requestVideoFrameCallback" in v) v.requestVideoFrameCallback(show);
+          else p.mesh.material.uniforms.uBack.value = tex;
+        };
+        if ("requestVideoFrameCallback" in v) v.requestVideoFrameCallback(show);
+        else setTimeout(show, 250); // ponytail: no frame callback (old Firefox), so just wait a moment
       });
       p.video = v;
     };
 
-    const render = (P: number) => {
+    const render = (P: number, F = 0, hs = 0) => {
       if (disposed || !panels.length) return;
       lastP = P;
+      lastF = F;
+      lastH = hs;
       const pw = Math.min(W * (W < H ? 0.86 : 0.62), H * 0.5 * PANEL_ASPECT);
       const ph = pw / PANEL_ASPECT;
       const step = pw * (1 + GAP);
       const card = cardSize(W, H);
-      const bend = ease(clamp01((P - BEND_AT) / BEND_LEN));
+      // after the carousel (F): the row flattens into the art slots, then the pixel art slides up into each panel;
+      // hs: the art tiles slide down and away as the footer comes in
+      const c = ease(clamp01(F / 0.45));
+      const exit = ease(clamp01(hs / 0.5)) * H * 1.1;
+      const slots = stampSlots(W, H);
+      const bend = ease(clamp01((P - BEND_AT) / BEND_LEN)) * (1 - c);
       const pos = carouselPos(P, N);
       const centre = Math.round(pos);
 
       panels.forEach((p, k) => {
         const m = p.mesh;
+        // flat neighbours overlap at the same depth: without a fixed order the GPU z-fights them into white streaks.
+        // The panel nearest the centre always wins.
+        m.material.polygonOffsetUnits = -4 * (N - Math.abs(k - pos));
         const t = ease(clamp01((P - FAN_AT - k * 0.012) / FAN_LEN));
         const f = k < PILE ? ease(clamp01((P - SLIDE_AT - k * 0.012) / SLIDE_LEN)) : 1; // late panels arrive already showing video
 
@@ -162,15 +205,19 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
         const h0 = pose ? card.h : ph;
         const z0 = pose ? j * 3 : 0;
 
-        const w = lerp(w0, pw, t);
-        const h = lerp(h0, ph, t);
-        m.position.set(lerp(x0, (k - pos) * step, t), lerp(y0, 0, t), lerp(z0, 0, t));
-        m.rotation.set(0, 0, lerp(rot0, 0, t));
+        const sl = slots[SLOT[k]];
+        const lead = LEAD.includes(k); // the other panels shrink away into the slot
+        const w = lerp(lerp(w0, pw, t), lead ? sl.win.w : 0, c);
+        const h = Math.max(lerp(lerp(h0, ph, t), lead ? sl.win.h : 0, c), 0.01);
+        m.position.set(lerp(lerp(x0, (k - pos) * step, t), sl.win.cx - W / 2, c), lerp(lerp(y0, 0, t), H / 2 - sl.win.cy, c) - exit, lerp(z0, 0, t));
+        m.rotation.set(0, 0, lerp(lerp(rot0, 0, t), -THREE.MathUtils.degToRad(sl.rot), c));
         m.scale.set(w, h, 1);
 
         const u = m.material.uniforms;
         u.uBend.value = bend;
         u.uSlide.value = f;
+        u.uArtSlide.value = ease(clamp01((F - 0.35) / 0.35));
+        coverUv(ART_W / ART_H, w / Math.max(h, 0.01), u.uArtUv.value);
         coverUv(p.frontAspect, w / h, u.uFrontUv.value);
         coverUv(p.backAspect, w / h, u.uBackUv.value);
 
@@ -183,7 +230,7 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
         }
       });
 
-      canvas.style.pointerEvents = P > CAROUSEL_AT ? "auto" : "none";
+      canvas.style.pointerEvents = P > CAROUSEL_AT && F < 0.5 ? "auto" : "none";
       renderer.render(scene, camera);
     };
 
@@ -202,7 +249,7 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
     };
     const onMove = (e: PointerEvent) => void (canvas.style.cursor = lastP > CAROUSEL_AT && pick(e) >= 0 ? "pointer" : "default");
     const onLost = (e: Event) => e.preventDefault(); // allow the browser to restore the context
-    const onRestored = () => render(lastP);
+    const onRestored = () => render(lastP, lastF, lastH);
     canvas.addEventListener("pointerdown", onDown);
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointermove", onMove);
@@ -210,17 +257,24 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
     canvas.addEventListener("webglcontextrestored", onRestored);
     const onResize = () => {
       layout();
-      render(lastP);
+      render(lastP, lastF, lastH);
     };
     window.addEventListener("resize", onResize);
 
     layout();
     (async () => {
       const fronts = [...stack, "/hero.jpg"]; // bottom to top of the pile
-      const [frontTex, posterTex] = await Promise.all([
+      const [frontTex, posterTex, artCv] = await Promise.all([
         Promise.all(fronts.map(load)),
         Promise.all(projects.map((p) => load(p.poster))),
+        Promise.all(ART.map((a) => ditherArt(a.src, a.tint, ART_W, ART_H))),
       ]);
+      const artTex = artCv.map((cv) => {
+        const t = new THREE.CanvasTexture(cv);
+        t.minFilter = t.magFilter = THREE.NearestFilter; // keep the pixels square
+        t.generateMipmaps = false;
+        return t;
+      });
       if (disposed) return;
       panels = projects.map((_, k) => {
         const front = k < PILE ? frontTex[PILE - 1 - k] : posterTex[k];
@@ -231,6 +285,7 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
         };
         const material = new THREE.ShaderMaterial({
           vertexShader: VERT,
+          polygonOffset: true,
           fragmentShader: FRAG,
           uniforms: {
             uFront: { value: front },
@@ -239,13 +294,16 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
             uBackUv: { value: new THREE.Vector2(1, 1) },
             uBend: { value: 0 },
             uSlide: { value: 0 },
+            uArt: { value: artTex[SLOT[k]] },
+            uArtUv: { value: new THREE.Vector2(1, 1) },
+            uArtSlide: { value: 0 },
             uR: { value: BEND_R },
           },
         });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.userData.k = k;
         scene.add(mesh);
-        return { mesh, frontAspect: aspect(front), backAspect: aspect(poster), posterTex: poster, wantPlay: false };
+        return { mesh, frontAspect: aspect(front), backAspect: aspect(poster), posterTex: poster, artTex: artTex[SLOT[k]], wantPlay: false };
       });
       render(0);
       onReady({
@@ -268,6 +326,7 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
         p.video?.load();
         p.videoTex?.dispose();
         p.posterTex.dispose();
+        p.artTex.dispose();
         (p.mesh.material.uniforms.uFront.value as THREE.Texture).dispose();
         p.mesh.material.dispose();
       });

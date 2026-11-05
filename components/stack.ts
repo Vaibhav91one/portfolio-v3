@@ -34,3 +34,29 @@ export const carouselPos = (P: number, n: number) => {
   const g = Math.min(1, Math.max(0, (raw - i - 0.15) / 0.7));
   return i + ramp(g);
 };
+
+export type Slot = {
+  rot: number; // deg, slight tilt like a stamp lying on the table
+  x: number; // card box, px from the top-left of the screen
+  y: number;
+  w: number;
+  h: number;
+  win: { cx: number; cy: number; w: number; h: number }; // the picture window inside the card
+};
+/** The four stamp cards of the "Things I work on" section, shared by the DOM cards and the 3D panels that turn into them. */
+export const stampSlots = (W: number, H: number): Slot[] => {
+  const phone = W < 700;
+  const w = phone ? W * 0.42 : W * 0.2;
+  const h = w * 1.3;
+  const gap = phone ? W * 0.05 : W * 0.025;
+  const cols = phone ? 2 : 4;
+  const left = (W - (cols * w + (cols - 1) * gap)) / 2;
+  const top = phone ? H * 0.34 : H * 0.64 - h / 2;
+  return [-1.5, 1.2, -0.8, 1.6].map((rot, i) => {
+    const x = left + (i % cols) * (w + gap);
+    const y = top + Math.floor(i / cols) * (h + gap);
+    const ww = w * 0.9;
+    const wh = h * 0.58;
+    return { rot, x, y, w, h, win: { cx: x + w / 2, cy: y + h * 0.04 + wh / 2, w: ww, h: wh } };
+  });
+};
