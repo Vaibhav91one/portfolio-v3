@@ -53,7 +53,7 @@ export default function Roles({ box, bio, tags }: { box: RefObject<HTMLDivElemen
           </p>
         ))}
       </div>
-      <div ref={bio} className="pointer-events-auto absolute right-[2.8vw] top-[15vh] max-w-[22vw] opacity-0 max-sm:hidden">
+      <div ref={bio} className="pointer-events-auto absolute right-[2.8vw] top-[15vh] max-w-[22vw] opacity-0 max-lg:top-[11vh] max-lg:max-w-[340px] max-sm:left-[2.8vw] max-sm:top-[17vh] max-sm:max-w-none">
         <p className="text-[max(14px,1.15vw)] font-normal leading-[1.25]">{ABOUT}</p>
         <RollButton href="mailto:vaibhavtomar3003@gmail.com" className="mt-[3vh]">
           Contact me

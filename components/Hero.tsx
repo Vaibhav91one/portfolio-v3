@@ -103,7 +103,7 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
           <AnimatedParagraph
             text={BIO}
             play={play}
-            className="max-w-[22vw] text-[max(15px,1.45vw)] font-normal leading-[1.25]"
+            className="max-w-[22vw] text-[max(15px,1.45vw)] font-normal leading-[1.25] max-sm:max-w-[62vw]"
           />
         </div>
         <div data-in data-nav className="pointer-events-auto absolute right-[2.8vw] top-[3vh]">
