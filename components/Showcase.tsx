@@ -58,6 +58,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
     const st = stage.current!;
     const pile = st.querySelector<HTMLElement>("[data-pile]")!;
     const exits = st.querySelectorAll<HTMLElement>("[data-exit]");
+    const fades = st.querySelectorAll<HTMLElement>("[data-fade]"); // fade only (no slide): the pixel sky
     let shown = -1;
     let wasDark: boolean | undefined;
 
@@ -69,6 +70,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
 
       const out = ramp(clamp01(P / 0.08));
       gsap.set(exits, { opacity: 1 - out, y: -24 * out });
+      gsap.set(fades, { opacity: 1 - out });
       const dark = ramp(clamp01((P - 0.15) / 0.25)); // paper -> near black as the cards flip
       const bg = `rgb(${mix(244, 10, dark)},${mix(244, 10, dark)},${mix(244, 10, dark)})`;
       wrap.current!.style.background = bg;
@@ -121,6 +123,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
       trigger.kill();
       pile.style.visibility = "";
       gsap.set(exits, { clearProps: "opacity,transform" });
+      gsap.set(fades, { clearProps: "opacity" });
     };
   }, [api]);
 

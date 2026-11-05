@@ -5,6 +5,7 @@ import gsap from "gsap";
 import AnimatedParagraph from "./AnimatedParagraph";
 import Clock from "./Clock";
 import Nav from "./Nav";
+import PixelSky from "./PixelSky";
 import { CARD_CLASS, HERO_POSE, POSES, STACK_CARD, poseTransform } from "./stack";
 
 const BIO = "A Swiss-army-knife(-ish!) Design Engineer — crafting playful, minimal, and functional experiences where design meets code.";
@@ -30,6 +31,8 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
 
   return (
     <section ref={root} className="relative h-screen w-full overflow-hidden text-[color:var(--fg,#111)]">
+      <PixelSky play={play} />
+
       {/* giant name, behind the pile */}
       <div data-exit className="absolute inset-x-0 bottom-0 z-0 overflow-hidden px-[2.8vw] pb-[1.2vw]" style={vis}>
         <h1
