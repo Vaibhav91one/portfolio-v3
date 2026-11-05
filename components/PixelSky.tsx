@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-const TONES = ["rgba(255,203,98,.26)", "rgba(255,150,50,.40)"]; // warm, translucent: they tint the glow behind; level 0 is clear
+const TONES = ["rgba(168,204,128,.30)", "rgba(92,150,112,.38)"]; // sage and foliage green, from the photo; translucent so they tint the glow; level 0 is clear
 const FPS = 20; // the drift is slow; no need to redraw at display rate
 const hash = (x: number, y: number, z: number) => {
   const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
@@ -123,12 +123,12 @@ export default function PixelSky({ play }: { play: boolean }) {
 
   return (
     <div ref={wrap} data-fade aria-hidden className="pointer-events-none absolute inset-0 z-0">
-      {/* soft orange-yellow glow, bottom-weighted; the pixel clouds below tint over it */}
+      {/* soft green glow, bottom-weighted; the pixel clouds below tint over it */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(60vw 50vh at 88% 105%, rgba(255,150,40,.38), transparent 70%), radial-gradient(55vw 45vh at 8% 100%, rgba(255,205,80,.38), transparent 70%)",
+            "radial-gradient(60vw 50vh at 88% 105%, rgba(110,170,120,.34), transparent 70%), radial-gradient(55vw 45vh at 8% 100%, rgba(200,222,140,.4), transparent 70%)",
         }}
       />
       <canvas
