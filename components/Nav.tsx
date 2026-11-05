@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { goTo } from "./stack";
 
 const ITEMS = [
   { label: "Work", id: "projects" },
@@ -67,7 +68,7 @@ export default function Nav({
               href={`#${item.id}`}
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
+                goTo(item.id);
               }}
               ref={(el) => void (links.current[i] = el)}
               style={{ perspective: "380px" }}

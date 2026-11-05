@@ -22,6 +22,16 @@ export const poseTransform = (p: Pose) => `translate(${p.x}vw, ${p.y}vh) rotate(
 /** scroll progress (0..1) where the pile has become a row and the carousel starts moving */
 export const CAROUSEL_AT = 0.4;
 
+// scroll progress (0..1 over the pinned wrapper) where each nav target is on screen: the carousel, "What I do", the footer
+const SECTION_AT: Record<string, number> = { projects: 0.265, about: 0.78, contact: 1 };
+/** Nav click: glide to the section. The pinned scene has no real section elements, so it scrolls to a progress; the plain fallback page uses the ids. */
+export const goTo = (id: string) => {
+  const pinned = document.querySelector("[data-pinned]");
+  const el = document.getElementById(id);
+  if (!pinned && el) return el.scrollIntoView({ behavior: "smooth" });
+  window.scrollTo({ top: (SECTION_AT[id] ?? 0) * (document.documentElement.scrollHeight - innerHeight), behavior: "smooth" });
+};
+
 /** Film-style speed ramp (slow, fast, slow). Same curve as gsap's "expo.inOut"; RAMP is the string form for tweens. */
 export const RAMP = "expo.inOut";
 export const ramp = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : t < 0.5 ? 2 ** (20 * t - 10) / 2 : (2 - 2 ** (-20 * t + 10)) / 2);
