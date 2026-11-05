@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { projects } from "@/data/projects";
 import Hero from "./Hero";
 import ProjectsFallback from "./ProjectsFallback";
+import Asterisk from "./Asterisk";
 import ProjectsUI from "./ProjectsUI";
 import SectionTag from "./SectionTag";
 import { carouselPos, ramp } from "./stack";
@@ -37,6 +38,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
   const stage = useRef<HTMLDivElement>(null);
   const bar = useRef(0); // 0..1 through the carousel, read by the pixel bar
   const tag = useRef<HTMLDivElement>(null);
+  const ast = useRef<HTMLDivElement>(null);
   const ui = useRef<HTMLDivElement>(null);
   const [api, setApi] = useState<StageApi | null>(null);
   const [idx, setIdx] = useState(0);
@@ -86,6 +88,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
       const pos = carouselPos(P, projects.length);
       ui.current!.style.opacity = String(clamp01((P - 0.3) / 0.1));
       bar.current = projects.length > 1 ? pos / (projects.length - 1) : 1;
+      ast.current!.style.transform = `scale(${1 - 0.45 * ramp(clamp01((P - 0.1) / 0.3))})`; // shrinks into the corner so it stays clear of the carousel
       const tg = ramp(clamp01((P - 0.28) / 0.1)); // the corner is free once the bio has gone and the cards are dark
       tag.current!.style.opacity = String(tg);
       tag.current!.style.transform = `translateY(${(1 - tg) * 12}px)`;
@@ -138,6 +141,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
   return (
     <div ref={wrap} className="relative h-[800vh]" style={{ background: "#f4f4f4" }}>
       <div ref={stage} className="sticky top-0 h-screen overflow-clip">
+        <Asterisk play={play} box={ast} />
         <Hero play={play} stack={stack} />
         {play && <ProjectsStage stack={stack} onReady={setApi} />}
         <SectionTag tag={tag} />

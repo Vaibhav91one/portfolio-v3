@@ -47,8 +47,8 @@ export default function NameMarquee() {
   return (
     <div ref={track} data-name className="flex w-max text-[11.5vw] font-normal leading-[0.8] whitespace-nowrap">
       {[0, 1, 2].map((i) => (
-        <span key={i} className="pr-[0.45em]" aria-hidden={i ? true : undefined}>
-          Vaibhav Tomar
+        <span key={i} className="pr-[0.3em]" aria-hidden={i ? true : undefined}>
+          Vaibhav Tomar —
         </span>
       ))}
     </div>

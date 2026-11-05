@@ -58,8 +58,8 @@ export default function ProjectsUI({
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           const d = front - (c + 0.5 + ROW_SKEW[r]);
-          const k = c / (COLS - 1); // yellow -> orange along the bar
-          ctx.fillStyle = `rgb(${Math.round(255 - 11 * k)},${Math.round(203 - 93 * k)},${Math.round(98 - 66 * k)})`;
+          const k = c / (COLS - 1); // sage -> green along the bar
+          ctx.fillStyle = `rgb(${Math.round(184 - 98 * k)},${Math.round(204 - 75 * k)},${Math.round(168 - 99 * k)})`;
           const t = d >= BAND ? 1 : d <= 0 ? 0 : d / BAND; // 0 empty .. 1 solid
           // blocks on the front scale up and down, each on its own rhythm; solid and empty ones hold still
           const live = t > 0 && t < 1 && !still;

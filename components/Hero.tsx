@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import AnimatedParagraph from "./AnimatedParagraph";
-import Asterisk from "./Asterisk";
 import Clock from "./Clock";
 import NameMarquee from "./NameMarquee";
 import Nav from "./Nav";
@@ -34,7 +33,6 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
   return (
     <section ref={root} className="relative h-screen w-full overflow-hidden text-[color:var(--fg,#111)]">
       <PixelSky play={play} />
-      <Asterisk play={play} />
 
       {/* giant name marquee, vertically centred behind the pile (box = one text line, 11.5vw * 0.8) */}
       <div data-exit className="absolute inset-x-0 top-[calc(50%-4.6vw)] z-0 overflow-hidden px-[2.8vw]" style={vis}>
