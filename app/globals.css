@@ -22,3 +22,8 @@ body {
   color: var(--foreground);
   font-family: Helvetica, Arial, sans-serif; /* same stack as the original site */
 }
+
+/* in-page nav links: no iOS long-press link preview (it would show a second copy of the page) */
+nav a {
+  -webkit-touch-callout: none;
+}
