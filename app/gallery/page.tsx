@@ -14,8 +14,8 @@ export default function GalleryPage() {
     <main className="fixed inset-0 overflow-hidden bg-[#f4f4f4] text-[#111]">
       <GalleryGrid />
       <h1 className="sr-only">Gallery</h1>
-      <RollButton asChild className="absolute left-[2.8vw] top-[3vh] z-10">
-        <Link href="/">Vaibhav Tomar</Link>
+      <RollButton asChild icon={<span aria-hidden>←</span>} className="absolute left-[2.8vw] top-[3vh] z-10">
+        <Link href="/">Back to exploring</Link>
       </RollButton>
     </main>
   );
