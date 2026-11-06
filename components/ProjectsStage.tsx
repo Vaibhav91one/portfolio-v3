@@ -264,6 +264,15 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
     };
     window.addEventListener("resize", onResize);
 
+    // videos loop on their own, but the canvas only redraws in render() (scroll): keep drawing while one is playing,
+    // so the clips don't freeze when scrolling stops
+    let raf = 0;
+    const live = () => {
+      raf = requestAnimationFrame(live);
+      if (canvas.style.visibility !== "hidden" && panels.some((p) => p.video && !p.video.paused)) renderer.render(scene, camera);
+    };
+    raf = requestAnimationFrame(live);
+
     layout();
     (async () => {
       const fronts = [...stack, "/hero.webp"]; // bottom to top of the pile
@@ -317,6 +326,7 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
 
     return () => {
       disposed = true;
+      cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointerup", onUp);
