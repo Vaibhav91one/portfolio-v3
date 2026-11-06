@@ -15,6 +15,8 @@ const SAMPLES = 1200; // path resolution
 const FLY_S = 0.9; // the last trail images fly into the pile
 const FLY_STAGGER_S = 0.08;
 const END_HOLD_S = 0.3; // beat on the finished pile before the hand-off
+const PILE_ZONE_PX = STEP_PX * 4.5; // phones: drops this close to the end of the path land on the centre (>= the 4 pile cards)
+const PHONE_MAX_W = 700; // same cut as stampSlots
 
 /** Superellipse point (exponent < 1 squares the loop so it reaches the corners). r in 0..1 of the half-size. */
 const pointAt = (angle: number, r: number, w: number, h: number) => {
@@ -51,15 +53,25 @@ export default function Preloader({ onDone }: { onDone: (stack: string[]) => voi
       const { innerWidth: w, innerHeight: h } = window;
       const g = { steps: 0, current: 0, visible: 0, z: 0 };
       const dropped: HTMLImageElement[] = []; // every image placed, in order
+      // The path is short on a phone, so its last drops (the pile cards) sat on the left edge and then flew to the middle:
+      // there the final drops land on the centre and the pile forms in place.
+      const phone = w < PHONE_MAX_W;
+      let piling = false; // the first centre drop clears the old trail, so nothing lingers on the edge while the pile forms
 
       // the original mousemove handler, fed (x, y, travelled px) instead of a MouseEvent
-      const move = (x: number, y: number, travelled: number) => {
+      const move = (x: number, y: number, travelled: number, left: number) => {
         g.steps += travelled;
         if (g.steps >= g.current * STEP_PX) {
           const img = imgs.current[g.current];
           if (img) {
-            img.style.left = `${x}px`;
-            img.style.top = `${y}px`;
+            const centre = phone && left < PILE_ZONE_PX;
+            if (centre && !piling) {
+              piling = true;
+              dropped.forEach((d) => (d.style.display = "none"));
+              g.visible = 0;
+            }
+            img.style.left = `${centre ? w / 2 : x}px`;
+            img.style.top = `${centre ? h / 2 : y}px`;
             img.style.display = "block";
             img.style.zIndex = String(++g.z);
             dropped.push(img);
@@ -104,7 +116,7 @@ export default function Preloader({ onDone }: { onDone: (stack: string[]) => voi
         const f = b.d > a.d ? (s - a.d) / (b.d - a.d) : 0;
         const x = a.x + (b.x - a.x) * f;
         const y = a.y + (b.y - a.y) * f;
-        move(x, y, Math.hypot(x - prev.x, y - prev.y));
+        move(x, y, Math.hypot(x - prev.x, y - prev.y), total - s);
         prev = { x, y, d: s };
         if (t < 1) raf = requestAnimationFrame(tick);
       };
