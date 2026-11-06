@@ -21,6 +21,7 @@ export default function GalleryGrid() {
   const root = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState<{ cw: number; ch: number; cols: number; rows: number } | null>(null);
   const cells = useRef<{ box: HTMLDivElement; frame: HTMLDivElement; win: HTMLDivElement; img: HTMLImageElement }[]>([]);
+  const badge = useRef<HTMLDivElement>(null);
   const locked = useRef(false); // the viewer is open: the grid stands still and ignores input
   const [open, setOpen] = useState<{ idx: number; n: number; from: From } | null>(null);
 
@@ -95,6 +96,30 @@ export default function GalleryGrid() {
     gsap.ticker.add(tick);
 
     // drag + flick
+    // hover bubble (mouse only, as on the projects): "Drag" over the grid, "View" over a photo; it trails the pointer
+    const bubble = badge.current;
+    const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const bx = bubble && gsap.quickTo(bubble, "x", { duration: 0.5, ease: "power3" });
+    const by = bubble && gsap.quickTo(bubble, "y", { duration: 0.5, ease: "power3" });
+    if (bubble) gsap.set(bubble, { xPercent: -50, yPercent: -50, scale: 0 });
+    let shown = false;
+    let label = "";
+    const show = (on: boolean, x = 0, y = 0) => {
+      if (!bubble || !fine || on === shown) return;
+      shown = on;
+      if (on) gsap.set(bubble, { x, y }); // start under the pointer
+      gsap.to(bubble, { scale: on ? 1 : 0, duration: 0.4, ease: on ? "power3.inOut" : "power3.in", overwrite: "auto" });
+    };
+    const hover = (e: PointerEvent) => {
+      if (!bubble || !fine || locked.current || e.pointerType !== "mouse") return;
+      const t = (e.target as Element).closest("[data-frame]") ? "View" : "Drag";
+      if (t !== label) bubble.firstElementChild!.textContent = label = t;
+      show(true, e.clientX, e.clientY);
+      bx?.(e.clientX);
+      by?.(e.clientY);
+    };
+    const leave = () => show(false);
+
     let drag: { id: number; px: number; py: number; vx: number; vy: number; t: number } | null = null;
     let press: { cell: Element | null; x: number; y: number } | null = null; // where the press started, to tell a click from a drag
     const onDown = (e: PointerEvent) => {
@@ -105,6 +130,7 @@ export default function GalleryGrid() {
       el.style.cursor = "grabbing";
     };
     const onMove = (e: PointerEvent) => {
+      hover(e);
       if (!drag || e.pointerId !== drag.id) return;
       const dx = e.clientX - drag.px;
       const dy = e.clientY - drag.py;
@@ -126,6 +152,7 @@ export default function GalleryGrid() {
         const f = cells.current[n].frame;
         const r = f.getBoundingClientRect();
         locked.current = true;
+        show(false);
         drag = null;
         el.style.cursor = "grab";
         f.style.visibility = "hidden"; // the viewer draws its own copy until it has shrunk back
@@ -157,6 +184,7 @@ export default function GalleryGrid() {
     };
     el.addEventListener("pointerdown", onDown);
     el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", leave);
     el.addEventListener("pointerup", onUp);
     el.addEventListener("pointercancel", onUp);
     el.addEventListener("wheel", onWheel, { passive: false });
@@ -166,6 +194,8 @@ export default function GalleryGrid() {
       gsap.ticker.remove(tick);
       el.removeEventListener("pointerdown", onDown);
       el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerleave", leave);
+      if (bubble) gsap.killTweensOf(bubble);
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onUp);
       el.removeEventListener("wheel", onWheel);
@@ -197,6 +227,9 @@ export default function GalleryGrid() {
               <PhotoFrame data-frame src={PHOTOS[0].src} aspect="3 / 4" />
             </div>
           ))}
+      </div>
+      <div ref={badge} aria-hidden className="pointer-events-none fixed left-0 top-0 z-20 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#455CE9] text-sm font-light text-white">
+        <span />
       </div>
       {open && (
         <GalleryViewer

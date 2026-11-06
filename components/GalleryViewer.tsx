@@ -12,7 +12,7 @@ export type From = { cx: number; cy: number; w: number; rot: number };
  * Popup for one photo: its frame grows from where it was clicked to the middle of the screen over a dimmed backdrop,
  * then the text appears beside it (below it on a phone). The popup's layout (flex) decides where the frame lands: an
  * empty slot is measured and the frame, drawn on top of it, is scaled/moved/untilted from the clicked spot to the slot.
- * Closing plays the same timeline backwards. Esc, the scrim and Close all close it. onClosed fires when it is gone.
+ * Closing plays the same timeline backwards. Esc, the scrim and the "Back to exploring" button all close it. onClosed fires when it is gone.
  */
 export default function GalleryViewer({ photo, from, onClosed }: { photo: Photo; from: From; onClosed: () => void }) {
   const scrim = useRef<HTMLDivElement>(null);
@@ -82,9 +82,9 @@ export default function GalleryViewer({ photo, from, onClosed }: { photo: Photo;
       <button
         ref={closeBtn}
         onClick={close}
-        className="absolute right-[2.8vw] top-[3vh] z-10 text-[max(14px,1.05vw)] uppercase leading-none outline-offset-4 focus-visible:outline-2"
+        className="absolute left-[2.8vw] top-[3vh] z-10 rounded-full bg-[#111] px-4 py-2.5 text-[max(14px,1.05vw)] uppercase leading-none text-[#f4f4f4] outline-offset-4 focus-visible:outline-2"
       >
-        Close
+        ← Back to exploring
       </button>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[4vh] px-[2.8vw] sm:flex-row sm:gap-[5vw]">
         <div ref={slot} className="shrink-0" style={{ width: size.w, height: size.h }} />
