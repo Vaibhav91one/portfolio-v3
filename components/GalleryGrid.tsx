@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { PHOTOS, type Photo } from "@/data/gallery";
+import { PHOTOS } from "@/data/gallery";
+import { PhotoFrame, TILT, frameWidth } from "./PhotoFrame";
+import GalleryViewer, { type From } from "./GalleryViewer";
 
 const LERP = 0.075; // fraction of the gap closed per 60fps frame, as in the reference gallery
 const FLING_MS = 220; // how far a flick carries on, in ms of release velocity
@@ -10,22 +12,24 @@ const mod = (n: number, m: number) => ((n % m) + m) % m;
 
 /**
  * Endless photo grid you drag around. A small pool of cells is wrapped around the viewport and re-used: each cell
- * shows photo (col + 3 * row) mod N for its world column/row, so the set repeats without end. Every cell is a framed
- * photo (a mat and a thin border) with its text on the right. Only `transform` is written per frame; a cell's
- * photo and text are swapped only when its world index changes. Drag, flick, wheel and arrow keys all move one target;
- * the view eases toward it (1:1 with reduced motion).
+ * shows photo (col + 3 * row) mod N for its world column/row, so the set repeats without end. Every cell is one photo
+ * in an instant-camera frame. Only `transform` is written per frame; a cell's photo is swapped only when its world
+ * index changes. Drag, flick, wheel and arrow keys all move one target; the view eases toward it (1:1 with reduced
+ * motion). A click (not a drag) on a frame opens it in the viewer, with its text beside it.
  */
 export default function GalleryGrid() {
   const root = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState<{ cw: number; ch: number; cols: number; rows: number } | null>(null);
-  const cells = useRef<{ box: HTMLDivElement; img: HTMLImageElement; title: HTMLElement; meta: HTMLElement; note: HTMLElement }[]>([]);
+  const cells = useRef<{ box: HTMLDivElement; frame: HTMLDivElement; win: HTMLDivElement; img: HTMLImageElement }[]>([]);
+  const locked = useRef(false); // the viewer is open: the grid stands still and ignores input
+  const [open, setOpen] = useState<{ idx: number; n: number; from: From } | null>(null);
 
   // cell size from the viewport; the pool covers the screen plus a cell of margin
   useEffect(() => {
     const measure = () => {
       const { innerWidth: w, innerHeight: h } = window;
-      const cw = w < 700 ? Math.round(w * 0.9) : Math.round(Math.max(420, Math.min(560, w * 0.34)));
-      const ch = Math.round(cw * 0.75);
+      const ch = Math.round(Math.max(300, Math.min(520, h * 0.5)));
+      const cw = Math.round(ch * 0.8);
       setDims({ cw, ch, cols: Math.ceil(w / cw) + 2, rows: Math.ceil(h / ch) + 2 });
     };
     measure();
@@ -48,12 +52,14 @@ export default function GalleryGrid() {
     const last = cells.current.map(() => -1); // photo index each cell shows now
     const lastPos = cells.current.map(() => "");
 
-    const fill = (c: (typeof cells.current)[number], p: Photo) => {
+    // the frame is as tall as the cell allows, whatever the photo's shape; a wide photo is capped to the cell width
+    const fill = (c: (typeof cells.current)[number], idx: number) => {
+      const p = PHOTOS[idx];
+      c.frame.style.width = `${Math.min(frameWidth(ch * 0.82, p.w / p.h), cw * 0.92)}px`;
+      c.frame.style.transform = `rotate(${TILT[idx % TILT.length]}deg)`;
+      c.win.style.aspectRatio = `${p.w} / ${p.h}`;
       c.img.src = p.src;
       c.img.alt = p.title;
-      c.title.textContent = p.title;
-      c.meta.textContent = `${p.place} · ${p.date}`;
-      c.note.textContent = p.note;
     };
 
     const draw = () => {
@@ -74,12 +80,13 @@ export default function GalleryGrid() {
         const idx = mod(i - kx * cols + 3 * (j - ky * rows), PHOTOS.length);
         if (idx !== last[n]) {
           last[n] = idx;
-          fill(c, PHOTOS[idx]);
+          fill(c, idx);
         }
       });
     };
 
     const tick = (_t: number, dt: number) => {
+      if (locked.current) return;
       const k = reduce ? 1 : 1 - (1 - LERP) ** (dt / 16.67);
       x += (tx - x) * k;
       y += (ty - y) * k;
@@ -89,8 +96,11 @@ export default function GalleryGrid() {
 
     // drag + flick
     let drag: { id: number; px: number; py: number; vx: number; vy: number; t: number } | null = null;
+    let press: { cell: Element | null; x: number; y: number } | null = null; // where the press started, to tell a click from a drag
     const onDown = (e: PointerEvent) => {
+      if (locked.current) return;
       el.setPointerCapture(e.pointerId);
+      press = { cell: (e.target as Element).closest("[data-frame]"), x: e.clientX, y: e.clientY };
       drag = { id: e.pointerId, px: e.clientX, py: e.clientY, vx: 0, vy: 0, t: e.timeStamp };
       el.style.cursor = "grabbing";
     };
@@ -109,6 +119,19 @@ export default function GalleryGrid() {
     };
     const onUp = (e: PointerEvent) => {
       if (!drag || e.pointerId !== drag.id) return;
+      const n = press?.cell && e.type === "pointerup" && Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6 ? cells.current.findIndex((c) => c.frame === press!.cell) : -1;
+      press = null;
+      if (n >= 0) {
+        // a click: freeze the grid and open that photo from where its frame is now
+        const f = cells.current[n].frame;
+        const r = f.getBoundingClientRect();
+        locked.current = true;
+        drag = null;
+        el.style.cursor = "grab";
+        f.style.visibility = "hidden"; // the viewer draws its own copy until it has shrunk back
+        setOpen({ idx: last[n], n, from: { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: f.offsetWidth, rot: TILT[last[n] % TILT.length] } });
+        return;
+      }
       if (!reduce && e.timeStamp - drag.t < 80) {
         tx += drag.vx * FLING_MS;
         ty += drag.vy * FLING_MS;
@@ -119,10 +142,12 @@ export default function GalleryGrid() {
     // wheel / trackpad: scrolling down moves the photos up
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      if (locked.current) return;
       tx -= e.deltaX;
       ty -= e.deltaY;
     };
     const onKey = (e: KeyboardEvent) => {
+      if (locked.current) return;
       const step: Record<string, [number, number]> = { ArrowLeft: [cw, 0], ArrowRight: [-cw, 0], ArrowUp: [0, ch], ArrowDown: [0, -ch] };
       const s = step[e.key];
       if (!s) return;
@@ -163,25 +188,28 @@ export default function GalleryGrid() {
               key={`${dims.cw}-${n}`}
               ref={(box) => {
                 if (!box) return;
-                cells.current[n] = { box, img: box.querySelector("img")!, title: box.querySelector("[data-t]")!, meta: box.querySelector("[data-m]")!, note: box.querySelector("[data-n]")! };
+                cells.current[n] = { box, frame: box.querySelector("[data-frame]")!, win: box.querySelector("[data-win]")!, img: box.querySelector("img")! };
               }}
               aria-hidden
-              className="absolute left-0 top-0 flex items-center gap-[clamp(14px,2vw,28px)] p-[clamp(14px,2vw,28px)] will-change-transform"
+              className="absolute left-0 top-0 flex items-center justify-center will-change-transform"
               style={{ width: dims.cw, height: dims.ch }}
             >
-              {/* the frame: outer border, a paper mat, a soft shadow; the photo is letterboxed inside, never cropped */}
-              <div className="aspect-[3/4] h-full shrink-0 border border-[#111]/80 bg-[#fbfbfb] p-[6%] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.35)]">
-                {/* eslint-disable-next-line @next/next/no-img-element -- cells swap their photo on the fly */}
-                <img src={PHOTOS[0].src} alt="" draggable={false} decoding="async" className="h-full w-full object-contain" />
-              </div>
-              <div className="min-w-0 text-[max(12px,0.95vw)] leading-[1.3]">
-                <p data-t className="uppercase" />
-                <p data-m className="mt-1 opacity-55" />
-                <p data-n className="mt-3 opacity-80" />
-              </div>
+              <PhotoFrame data-frame src={PHOTOS[0].src} aspect="3 / 4" />
             </div>
           ))}
       </div>
+      {open && (
+        <GalleryViewer
+          photo={PHOTOS[open.idx]}
+          from={open.from}
+          onClosed={() => {
+            cells.current[open.n].frame.style.visibility = "";
+            locked.current = false;
+            setOpen(null);
+            root.current?.focus();
+          }}
+        />
+      )}
       {/* the screen-reader view: each photo once, not the endless repeats */}
       <ul className="sr-only">
         {PHOTOS.map((p) => (

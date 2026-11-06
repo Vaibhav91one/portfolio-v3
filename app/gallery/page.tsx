@@ -18,7 +18,7 @@ export default function GalleryPage() {
           Vaibhav Tomar
         </Link>
         <h1 className="font-normal">Gallery</h1>
-        <span className="opacity-60 max-sm:hidden">Drag to explore</span>
+        <span className="opacity-60 max-sm:hidden">Drag to explore, click a photo</span>
         <span className="hidden opacity-60 max-sm:inline">Drag</span>
       </header>
     </main>
