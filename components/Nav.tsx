@@ -4,10 +4,12 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { goTo } from "./stack";
 
-const ITEMS = [
+type Item = { label: string; id?: string; href?: string }; // id = scroll target on this page, href = another page
+const ITEMS: Item[] = [
   { label: "Work", id: "projects" },
   { label: "About", id: "about" },
   { label: "Contact", id: "contact" },
+  { label: "Gallery", href: "/gallery" },
 ];
 
 /**
@@ -63,10 +65,11 @@ export default function Nav({
     <nav aria-label={label}>
       <ul className={listClass}>
         {ITEMS.map((item, i) => (
-          <li key={item.id}>
+          <li key={item.label}>
             <a
-              href={`#${item.id}`}
+              href={item.href ?? `#${item.id}`}
               onClick={(e) => {
+                if (!item.id) return; // a real page link: let the browser navigate
                 e.preventDefault();
                 goTo(item.id);
               }}
