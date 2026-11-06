@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { projects } from "@/data/projects";
 import { ditherArt } from "./dither";
-import { CAROUSEL_AT, HERO_POSE, POSES, cardSize, carouselPos, ramp, stampSlots } from "./stack";
+import { HERO_POSE, POSES, cardSize, carouselPos, ramp, stampSlots } from "./stack";
 
 export type StageApi = {
   /** Draw the scene for scroll progress P (0..1) and footer progress F (0..1: the carousel collapsing into a strip). Pure function of both, so any frame can be redrawn. */
@@ -20,6 +20,7 @@ const GAP = 0.12; // gap between panels, share of panel width
 const PANEL_ASPECT = 2.39; // cinematic anamorphic; recordings are centre-cropped to it (cover fit)
 
 // phases of scroll progress
+const CLICK_AT = 0.25; // panels are fanned out and showing from here; the nav "Work" link lands just past it (0.265)
 const FAN_AT = 0.04;
 const FAN_LEN = 0.26;
 const SLIDE_AT = 0.14;
@@ -233,7 +234,7 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
         }
       });
 
-      canvas.style.pointerEvents = P > CAROUSEL_AT && F < 0.5 ? "auto" : "none";
+      canvas.style.pointerEvents = P > CLICK_AT && F < 0.5 ? "auto" : "none";
       renderer.render(scene, camera);
     };
 
@@ -246,11 +247,11 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
     };
     const onDown = (e: PointerEvent) => void (down = { x: e.clientX, y: e.clientY });
     const onUp = (e: PointerEvent) => {
-      if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6 || lastP <= CAROUSEL_AT) return;
+      if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6 || lastP <= CLICK_AT) return;
       const k = pick(e);
       if (k >= 0) window.open(projects[k].link, "_blank", "noopener");
     };
-    const onMove = (e: PointerEvent) => void (canvas.style.cursor = lastP > CAROUSEL_AT && pick(e) >= 0 ? "pointer" : "default");
+    const onMove = (e: PointerEvent) => void (canvas.style.cursor = lastP > CLICK_AT && pick(e) >= 0 ? "pointer" : "default");
     const onLost = (e: Event) => e.preventDefault(); // allow the browser to restore the context
     const onRestored = () => render(lastP, lastF, lastH);
     canvas.addEventListener("pointerdown", onDown);
