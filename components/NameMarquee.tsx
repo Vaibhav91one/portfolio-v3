@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
 
 const SPEED = 80; // px per second, as on the original site
+const LOOPS = 1000; // head room for reverse playback
 
 /**
- * The giant name as a marquee (from the original site): one track of 3 copies, moved in px/s on GSAP's ticker and
- * wrapped by exactly one copy width. Scrolling down runs it one way, scrolling up reverses it. Stops while faded out.
+ * The giant name as a marquee (from the original site): one track of 3 copies slid by exactly one copy width, forever.
+ * It runs as a Web Animation, so the compositor moves it and busy main-thread work at page load can't make it stutter.
+ * Scrolling down runs it one way, scrolling up reverses it. Paused while faded out. `data-name` is the wrapper the Hero's
+ * intro reveals, so that tween and the loop never share a transform.
  */
 export default function NameMarquee() {
   const track = useRef<HTMLDivElement>(null);
@@ -16,41 +18,53 @@ export default function NameMarquee() {
     const el = track.current!;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const fade = el.closest<HTMLElement>("[data-exit]");
-    const setX = gsap.quickSetter(el, "x", "px");
-    let copyWidth = (el.children[0] as HTMLElement).offsetWidth;
-    let x = 0;
-    let dir = -1;
     let lastY = window.scrollY;
+    let anim: Animation | undefined;
 
-    const tick = (_t: number, dt: number) => {
-      if (fade && +fade.style.opacity < 0.01 && fade.style.opacity !== "") return; // scrolled away: nothing to move
+    const faded = () => !!fade && fade.style.opacity !== "" && +fade.style.opacity < 0.01;
+    const start = () => {
+      const copyWidth = (el.children[0] as HTMLElement).offsetWidth;
+      const keep = anim ? ((+(anim.currentTime ?? 0) / +(anim.effect!.getTiming().duration as number)) % 1) : 0; // position within one copy
+      const rate = anim?.playbackRate ?? 1;
+      anim?.cancel();
+      const duration = (copyWidth / SPEED) * 1000;
+      anim = el.animate([{ transform: "translateX(0)" }, { transform: `translateX(${-copyWidth}px)` }], { duration, iterations: Infinity, easing: "linear" });
+      anim.currentTime = (LOOPS + keep) * duration; // start deep inside the loop so it can also play backwards
+      anim.playbackRate = rate;
+      if (faded()) anim.pause();
+    };
+    // playbackRate 1 = name slides left (page scrolled down); -1 plays the same loop backwards
+    const onScroll = () => {
       const y = window.scrollY;
-      if (y !== lastY) {
-        dir = y > lastY ? -1 : 1; // down = left, up = right
+      if (y !== lastY && anim) {
+        const next = y > lastY ? 1 : -1;
+        if (anim.playbackRate !== next) anim.updatePlaybackRate(next);
         lastY = y;
       }
-      x += (dir * SPEED * dt) / 1000;
-      if (x <= -copyWidth) x += copyWidth;
-      else if (x > 0) x -= copyWidth;
-      setX(x);
+      if (anim) {
+        if (faded() && anim.playState === "running") anim.pause();
+        else if (!faded() && anim.playState === "paused") anim.play();
+      }
     };
-    const onResize = () => (copyWidth = (el.children[0] as HTMLElement).offsetWidth);
-    gsap.ticker.add(tick);
-    window.addEventListener("resize", onResize);
+    start(); // starts moving left, as before
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", start);
     return () => {
-      gsap.ticker.remove(tick);
-      window.removeEventListener("resize", onResize);
-      gsap.set(el, { x: 0 });
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", start);
+      anim?.cancel();
     };
   }, []);
 
   return (
-    <div ref={track} data-name className="flex w-max text-[11.5vw] font-normal leading-[0.8] whitespace-nowrap">
-      {[0, 1, 2].map((i) => (
-        <span key={i} className="pr-[0.3em]" aria-hidden={i ? true : undefined}>
-          Vaibhav Tomar —
-        </span>
-      ))}
+    <div data-name>
+      <div ref={track} className="flex w-max text-[11.5vw] font-normal leading-[0.8] whitespace-nowrap">
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="pr-[0.3em]" aria-hidden={i ? true : undefined}>
+            Vaibhav Tomar —
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
