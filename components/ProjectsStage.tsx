@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import gsap from "gsap";
 import * as THREE from "three";
 import { projects } from "@/data/projects";
 import { ditherArt } from "./dither";
@@ -104,6 +105,7 @@ type Panel = {
  */
 export default function ProjectsStage({ stack, onReady }: { stack: string[]; onReady: (api: StageApi) => void }) {
   const host = useRef<HTMLCanvasElement>(null);
+  const badge = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = host.current!;
@@ -234,7 +236,9 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
         }
       });
 
-      canvas.style.pointerEvents = P > CLICK_AT && F < 0.5 ? "auto" : "none";
+      const active = P > CLICK_AT && F < 0.5;
+      canvas.style.pointerEvents = active ? "auto" : "none";
+      if (!active) show(false); // scrolled away while hovering
       renderer.render(scene, camera);
     };
 
@@ -251,12 +255,35 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
       const k = pick(e);
       if (k >= 0) window.open(projects[k].link, "_blank", "noopener");
     };
-    const onMove = (e: PointerEvent) => void (canvas.style.cursor = lastP > CLICK_AT && pick(e) >= 0 ? "pointer" : "default");
+    // "View" bubble (as on the old site): trails the pointer over a project, scales in and out; mouse only
+    const bubble = badge.current;
+    const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    let shown = false;
+    const bx = bubble && gsap.quickTo(bubble, "x", { duration: 0.5, ease: "power3" });
+    const by = bubble && gsap.quickTo(bubble, "y", { duration: 0.5, ease: "power3" });
+    if (bubble) gsap.set(bubble, { xPercent: -50, yPercent: -50, scale: 0 });
+    const show = (on: boolean, x = 0, y = 0) => {
+      if (!bubble || !fine || on === shown) return;
+      shown = on;
+      if (on) gsap.set(bubble, { x, y }); // start under the pointer, not flying in from the corner
+      gsap.to(bubble, { scale: on ? 1 : 0, duration: 0.4, ease: on ? "power3.inOut" : "power3.in", overwrite: "auto" });
+    };
+    const onMove = (e: PointerEvent) => {
+      const hit = lastP > CLICK_AT && pick(e) >= 0;
+      canvas.style.cursor = hit ? "pointer" : "default";
+      show(hit, e.clientX, e.clientY);
+      if (hit && fine) {
+        bx?.(e.clientX);
+        by?.(e.clientY);
+      }
+    };
+    const onLeave = () => show(false);
     const onLost = (e: Event) => e.preventDefault(); // allow the browser to restore the context
     const onRestored = () => render(lastP, lastF, lastH);
     canvas.addEventListener("pointerdown", onDown);
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointermove", onMove);
+    canvas.addEventListener("pointerleave", onLeave);
     canvas.addEventListener("webglcontextlost", onLost);
     canvas.addEventListener("webglcontextrestored", onRestored);
     const onResize = () => {
@@ -332,6 +359,8 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointerup", onUp);
       canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerleave", onLeave);
+      if (bubble) gsap.killTweensOf(bubble);
       canvas.removeEventListener("webglcontextlost", onLost);
       canvas.removeEventListener("webglcontextrestored", onRestored);
       panels.forEach((p) => {
@@ -351,5 +380,12 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <canvas ref={host} aria-hidden className="absolute inset-0 z-[15] h-full w-full" style={{ visibility: "hidden" }} />;
+  return (
+    <>
+      <canvas ref={host} aria-hidden className="absolute inset-0 z-[15] h-full w-full" style={{ visibility: "hidden" }} />
+      <div ref={badge} aria-hidden className="pointer-events-none fixed left-0 top-0 z-40 flex h-20 w-20 items-center justify-center rounded-full bg-[#455CE9] text-sm font-light text-white">
+        View
+      </div>
+    </>
+  );
 }
