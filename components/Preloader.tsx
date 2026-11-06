@@ -56,6 +56,7 @@ export default function Preloader({ onDone }: { onDone: (stack: string[]) => voi
       // The path is short on a phone, so its last drops (the pile cards) sat on the left edge and then flew to the middle:
       // there the final drops land on the centre and the pile forms in place.
       const phone = w < PHONE_MAX_W;
+      let piling = false; // the first centre drop clears the old trail, so nothing lingers on the edge while the pile forms
 
       // the original mousemove handler, fed (x, y, travelled px) instead of a MouseEvent
       const move = (x: number, y: number, travelled: number, left: number) => {
@@ -64,6 +65,11 @@ export default function Preloader({ onDone }: { onDone: (stack: string[]) => voi
           const img = imgs.current[g.current];
           if (img) {
             const centre = phone && left < PILE_ZONE_PX;
+            if (centre && !piling) {
+              piling = true;
+              dropped.forEach((d) => (d.style.display = "none"));
+              g.visible = 0;
+            }
             img.style.left = `${centre ? w / 2 : x}px`;
             img.style.top = `${centre ? h / 2 : y}px`;
             img.style.display = "block";
