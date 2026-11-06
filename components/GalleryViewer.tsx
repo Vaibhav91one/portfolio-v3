@@ -13,7 +13,7 @@ export type From = { cx: number; cy: number; w: number; rot: number };
  * Popup for one photo: its frame grows from where it was clicked to the middle of the screen over a dimmed backdrop,
  * then the text appears beside it (below it on a phone). The popup's layout (flex) decides where the frame lands: an
  * empty slot is measured and the frame, drawn on top of it, is scaled/moved/untilted from the clicked spot to the slot.
- * Closing plays the same timeline backwards. Esc, the scrim and the "Back to exploring" button all close it. onClosed fires when it is gone.
+ * Closing plays the same timeline backwards. Esc, the scrim and the "Back to gallery" button all close it. onClosed fires when it is gone.
  */
 export default function GalleryViewer({ photo, from, onClosed }: { photo: Photo; from: From; onClosed: () => void }) {
   const scrim = useRef<HTMLDivElement>(null);
@@ -28,7 +28,8 @@ export default function GalleryViewer({ photo, from, onClosed }: { photo: Photo;
   const [size] = useState(() => {
     const phone = window.innerWidth < 700;
     const a = photo.w / photo.h;
-    const H = phone ? Math.min(window.innerHeight * 0.5, 460) : Math.min(window.innerHeight * 0.78, 720);
+    const vh = window.visualViewport?.height ?? window.innerHeight; // what is really visible, not the layout viewport
+    const H = phone ? Math.min(vh * 0.5, 460) : Math.min(vh * 0.7, vh - 200, 680); // clear of the button on top and the edge below
     const w = Math.min(frameWidth(H, a), window.innerWidth * (phone ? 0.8 : 0.5));
     return { w, h: frameHeight(w, a) };
   });
@@ -78,11 +79,11 @@ export default function GalleryViewer({ photo, from, onClosed }: { photo: Photo;
   }, []);
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={photo.title} className="fixed inset-0 z-50 text-[#111]">
+    <div role="dialog" aria-modal="true" aria-label={photo.title} className="fixed inset-x-0 top-0 z-50 h-dvh text-[#111]">
       <div ref={scrim} onClick={close} className="absolute inset-0 bg-[#f4f4f4]/90 backdrop-blur-sm" />
       <div ref={back} className="absolute left-[2.8vw] top-[3vh] z-10">
         <RollButton onClick={close} icon={<span aria-hidden>←</span>}>
-          Back to exploring
+          Back to gallery
         </RollButton>
       </div>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[4vh] px-[2.8vw] sm:flex-row sm:gap-[5vw]">
