@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import type { Photo } from "@/data/gallery";
 import { PhotoFrame, frameHeight, frameWidth } from "./PhotoFrame";
+import { RollButton } from "./RollButton";
 
 /** Where the clicked frame is on screen: centre, card width and tilt. */
 export type From = { cx: number; cy: number; w: number; rot: number };
@@ -19,7 +20,7 @@ export default function GalleryViewer({ photo, from, onClosed }: { photo: Photo;
   const slot = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   const text = useRef<HTMLDivElement>(null);
-  const closeBtn = useRef<HTMLButtonElement>(null);
+  const back = useRef<HTMLDivElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
   const closing = useRef(false);
 
@@ -57,7 +58,7 @@ export default function GalleryViewer({ photo, from, onClosed }: { photo: Photo;
       ).fromTo(kids, { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out", stagger: 0.08 }, 0.35);
     }
     tl.current = t;
-    closeBtn.current?.focus();
+    back.current?.querySelector("button")?.focus();
     return () => void t.kill();
     // runs once per popup; the photo and origin are fixed for its lifetime
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,13 +80,11 @@ export default function GalleryViewer({ photo, from, onClosed }: { photo: Photo;
   return (
     <div role="dialog" aria-modal="true" aria-label={photo.title} className="fixed inset-0 z-50 text-[#111]">
       <div ref={scrim} onClick={close} className="absolute inset-0 bg-[#f4f4f4]/90 backdrop-blur-sm" />
-      <button
-        ref={closeBtn}
-        onClick={close}
-        className="absolute left-[2.8vw] top-[3vh] z-10 rounded-full bg-[#111] px-4 py-2.5 text-[max(14px,1.05vw)] uppercase leading-none text-[#f4f4f4] outline-offset-4 focus-visible:outline-2"
-      >
-        ← Back to exploring
-      </button>
+      <div ref={back} className="absolute left-[2.8vw] top-[3vh] z-10">
+        <RollButton onClick={close} icon={<span aria-hidden>←</span>}>
+          Back to exploring
+        </RollButton>
+      </div>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[4vh] px-[2.8vw] sm:flex-row sm:gap-[5vw]">
         <div ref={slot} className="shrink-0" style={{ width: size.w, height: size.h }} />
         <div ref={text} className="pointer-events-auto max-h-[34vh] max-w-[30rem] overflow-y-auto sm:max-h-none">

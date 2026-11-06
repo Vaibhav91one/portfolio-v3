@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import GalleryGrid from "@/components/GalleryGrid";
+import { RollButton } from "@/components/RollButton";
 
 export const metadata: Metadata = {
   title: "Gallery — Vaibhav Tomar",
@@ -13,12 +14,9 @@ export default function GalleryPage() {
     <main className="fixed inset-0 overflow-hidden bg-[#f4f4f4] text-[#111]">
       <GalleryGrid />
       <h1 className="sr-only">Gallery</h1>
-      <Link
-        href="/"
-        className="absolute left-[2.8vw] top-[3vh] z-10 rounded-full bg-[#f4f4f4]/90 px-4 py-2.5 text-[max(14px,1.05vw)] uppercase leading-none backdrop-blur-sm outline-offset-4"
-      >
-        Vaibhav Tomar
-      </Link>
+      <RollButton asChild className="absolute left-[2.8vw] top-[3vh] z-10">
+        <Link href="/">Vaibhav Tomar</Link>
+      </RollButton>
     </main>
   );
 }
