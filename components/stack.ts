@@ -6,7 +6,16 @@ export const STACK_CARD = "absolute left-1/2 top-1/2 -translate-x-1/2 -translate
 /** Photos (preloader trail, pile, hero) ship as <name>.webp plus a 360px-wide <name>-360.webp for phones. Preloader and
  *  Hero use the same srcset/sizes, so the trail image and its pile card pick the same file and the hand-off stays identical. */
 export const PHOTO_SIZES = "30vw";
-export const photoSrcSet = (src: string) => `${src.replace(/\.webp$/, "-360.webp")} 360w, ${src} 1100w`;
+// Real pixel widths of the full-size files. The w descriptor has to be the true width: the browser derives the image's
+// natural size from it, and Hero's displacement crops with naturalWidth/Height (a wrong width = a zoomed-in corner).
+const FULL_W: Record<string, number> = { "/preloader/2.webp": 825, "/preloader/3.webp": 1100, "/preloader/4.webp": 825, "/preloader/5.webp": 825, "/preloader/6.webp": 825, "/preloader/7.webp": 825 }; // the rest are 619
+export const photoSrcSet = (src: string) => `${src.replace(/\.webp$/, "-360.webp")} 360w, ${src} ${FULL_W[src] ?? 619}w`;
+/** Real pixel width of the file an <img> picked (its currentSrc). With a srcset, naturalWidth/Height are density-corrected
+ *  CSS px, but canvas drawImage crops in file pixels: scale by this / naturalWidth before cropping. */
+export const photoPixelWidth = (url: string) => {
+  const path = new URL(url, location.href).pathname;
+  return path.endsWith("-360.webp") ? 360 : (FULL_W[path] ?? 619);
+};
 
 /** Card size in px for a viewport, matching CARD_CLASS. */
 export const cardSize = (w: number, h: number) => ({ w: w * 0.28, h: Math.min(w * 0.35, h * 0.74) });
