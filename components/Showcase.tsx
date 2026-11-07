@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { projects } from "@/data/projects";
@@ -209,18 +209,33 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
   return (
     <div ref={wrap} data-pinned className="relative h-[1300vh]" style={{ background: "#f4f4f4" }}>
       <div ref={stage} className="sticky top-0 h-screen overflow-clip">
-        <div ref={sky} data-gate className="pointer-events-none absolute inset-0 opacity-0">
-          <PixelSky play={play} calm />
-        </div>
-        <Asterisk play={play} box={ast} spin={spin} />
+        {/* Each <Suspense> is its own hydration step, so React yields between them instead of hydrating the whole stage
+            in one long task. Everything wrapped is hidden or off-screen at load; the refs they fill are only read once
+            the intro is over (play / api), long after hydration. */}
+        <Suspense>
+          <div ref={sky} data-gate className="pointer-events-none absolute inset-0 opacity-0">
+            <PixelSky play={play} calm />
+          </div>
+        </Suspense>
+        <Suspense>
+          <Asterisk play={play} box={ast} spin={spin} />
+        </Suspense>
         <Hero play={play} stack={stack} />
         {play && <ProjectsStage stack={stack} onReady={setApi} />}
-        <Roles box={roles} bio={bio} tags={tags} />
-        <div ref={pages} className="pointer-events-none absolute inset-x-0 top-0 z-[16] opacity-0 text-[color:var(--fg,#111)] [&>section]:h-screen">
-          <Footer />
-        </div>
-        <SectionTag tag={tag} />
-        <ProjectsUI idx={idx} progress={bar} ui={ui} instant={!settled} />
+        <Suspense>
+          <Roles box={roles} bio={bio} tags={tags} />
+        </Suspense>
+        <Suspense>
+          <div ref={pages} className="pointer-events-none absolute inset-x-0 top-0 z-[16] opacity-0 text-[color:var(--fg,#111)] [&>section]:h-screen">
+            <Footer />
+          </div>
+        </Suspense>
+        <Suspense>
+          <SectionTag tag={tag} />
+        </Suspense>
+        <Suspense>
+          <ProjectsUI idx={idx} progress={bar} ui={ui} instant={!settled} />
+        </Suspense>
         <ul className="sr-only">
           {projects.map((p) => (
             <li key={p.slug}>

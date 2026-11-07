@@ -17,6 +17,45 @@ html[data-boot="dark"] main > div {
   background: #0a0a0a !important; /* the scroll wrapper sets its own inline paper colour */
 }
 
+/* the preloader is server-rendered; on a repeat visit in the same session the boot script sets data-seen before first paint */
+html[data-seen] [data-preloader] {
+  display: none;
+}
+
+/* Phones: the trail's first photo (portrait, 619x1100) is already in place before any JS runs, exactly where the first drop
+   puts it (top-left, clamped fully on screen; see Preloader move), so the first paint has content and the trail just continues. */
+@media (max-width: 699px) {
+  html:not([data-seen]) [data-preloader] > img:first-child {
+    display: block;
+    left: 15vw;
+    top: calc(15vw * 1100 / 619);
+  }
+}
+
+/* lenis/dist/lenis.css, here instead of imported by SmoothScroll (Lenis itself loads after the intro) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch],
+.lenis [data-lenis-prevent-vertical],
+.lenis [data-lenis-prevent-horizontal] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+.lenis.lenis-autoToggle {
+  transition-property: overflow;
+  transition-duration: 1ms;
+  transition-behavior: allow-discrete;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
