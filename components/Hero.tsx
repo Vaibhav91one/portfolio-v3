@@ -9,7 +9,7 @@ import NameMarquee from "./NameMarquee";
 import Nav from "./Nav";
 import PixelSky from "./PixelSky";
 import type { Paint } from "./Displacement";
-import { CARD_CLASS, HERO_POSE, PHOTO_SIZES, POSES, STACK_CARD, photoSrcSet, poseTransform } from "./stack";
+import { CARD_CLASS, HERO_POSE, PHOTO_SIZES, POSES, STACK_CARD, photoPixelWidth, photoSrcSet, poseTransform } from "./stack";
 
 // WebGL, pointer-only: its code loads on the first mouse move over the hero, so none of it runs during page load
 const Displacement = dynamic(() => import("./Displacement"), { ssr: false });
@@ -46,14 +46,18 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
       const w = card.offsetWidth;
       const h = card.offsetHeight;
       const m = new DOMMatrix(getComputedStyle(card).transform);
-      const ia = img.naturalWidth / img.naturalHeight;
+      // the source crop is in file pixels; naturalWidth/Height are density-corrected by the srcset
+      const k = photoPixelWidth(img.currentSrc) / img.naturalWidth;
+      const nw = img.naturalWidth * k;
+      const nh = img.naturalHeight * k;
+      const ia = nw / nh;
       const ca = w / h;
-      const sw = ia > ca ? img.naturalHeight * ca : img.naturalWidth;
-      const sh = ia > ca ? img.naturalHeight : img.naturalWidth / ca;
+      const sw = ia > ca ? nh * ca : nw;
+      const sh = ia > ca ? nh : nw / ca;
       ctx.save();
       ctx.translate(r.left + r.width / 2 - box.left, r.top + r.height / 2 - box.top);
       ctx.rotate(Math.atan2(m.b, m.a));
-      ctx.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, -w / 2, -h / 2, w, h);
+      ctx.drawImage(img, (nw - sw) / 2, (nh - sh) / 2, sw, sh, -w / 2, -h / 2, w, h);
       ctx.restore();
     }
   };
@@ -107,7 +111,7 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
           <AnimatedParagraph
             text={BIO}
             play={play}
-            className="max-w-[22vw] text-[max(15px,1.45vw)] font-normal leading-[1.25] max-sm:max-w-[72vw] max-sm:text-center"
+            className="max-w-[max(22vw,15rem)] text-[max(15px,1.45vw)] font-normal leading-[1.25] max-sm:max-w-[72vw] max-sm:text-center"
           />
         </div>
         <div data-in data-nav className="pointer-events-auto absolute right-[2.8vw] top-[3vh]">

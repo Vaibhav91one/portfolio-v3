@@ -51,6 +51,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
   const sky = useRef<HTMLDivElement>(null); // the calmer pixel sky for the stamps section
   const pages = useRef<HTMLDivElement>(null); // the footer screen
   const [api, setApi] = useState<StageApi | null>(null);
+  const [stageOn, setStageOn] = useState(false); // the three.js stage mounts once the hero intro has settled (see below)
   const [idx, setIdx] = useState(0);
   const [settled, setSettled] = useState(false); // false until the first position is drawn: no rolling title on load
   const kind = useSyncExternalStore(noop, mode, () => "gl");
@@ -63,6 +64,25 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
     st.style.opacity = "0";
     const bail = setTimeout(() => (st.style.opacity = "1"), 3000); // never stay hidden if the scene can't load
     return () => clearTimeout(bail);
+  }, [play]);
+
+  // Booting the stage (WebGL context, texture decodes, shaders) is one ~70-120 ms main-thread task. Started at the
+  // hand-off it froze the hero intro mid-motion, so it waits until the intro is done (name rise = 1.2 s) and the
+  // browser is idle, or starts right away on the first scroll / touch, or when the page was reloaded part-way down.
+  useEffect(() => {
+    if (!play) return;
+    const go = () => setStageOn(true);
+    const events = ["wheel", "touchstart", "keydown", "scroll"] as const;
+    const ric = "requestIdleCallback" in window; // not in Safari
+    let idle = 0;
+    const timer = setTimeout(() => (idle = ric ? requestIdleCallback(go, { timeout: 2000 }) : window.setTimeout(go, 0)), window.scrollY > 2 ? 0 : 1400);
+    events.forEach((e) => window.addEventListener(e, go, { once: true, passive: true }));
+    return () => {
+      clearTimeout(timer);
+      if (ric) cancelIdleCallback(idle);
+      else clearTimeout(idle);
+      events.forEach((e) => window.removeEventListener(e, go));
+    };
   }, [play]);
 
   useEffect(() => {
@@ -223,7 +243,7 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
         <Suspense>
           <Hero play={play} stack={stack} />
         </Suspense>
-        {play && <ProjectsStage stack={stack} onReady={setApi} />}
+        {play && stageOn && <ProjectsStage stack={stack} onReady={setApi} />}
         <Suspense>
           <Roles box={roles} bio={bio} tags={tags} />
         </Suspense>

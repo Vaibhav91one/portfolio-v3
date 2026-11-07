@@ -117,7 +117,10 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
     camera.position.z = DIST;
     const scene = new THREE.Scene();
     const raycaster = new THREE.Raycaster();
-    const loader = new THREE.TextureLoader();
+    // ImageBitmapLoader decodes off the main thread; TextureLoader's <img> got decoded synchronously at upload, inside
+    // the stage's boot task. Pre-flipped here, so flipY stays off (same orientation as TextureLoader's default).
+    const loader = new THREE.ImageBitmapLoader();
+    loader.setOptions({ imageOrientation: "flipY" });
     const geometry = new THREE.PlaneGeometry(1, 1, 64, 1);
     const ease = ramp;
 
@@ -144,7 +147,15 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
       return t;
     };
     const load = async (src: string) => {
-      const t = await loader.loadAsync(src).catch(blank);
+      const t = await loader
+        .loadAsync(src)
+        .then((bmp) => {
+          const tex = new THREE.Texture(bmp);
+          tex.flipY = false;
+          tex.needsUpdate = true;
+          return tex;
+        })
+        .catch(blank);
       t.anisotropy = renderer.capabilities.getMaxAnisotropy();
       return t;
     };
@@ -320,7 +331,7 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
         const front = k < PILE ? frontTex[PILE - 1 - k] : posterTex[k];
         const poster = posterTex[k];
         const aspect = (t: THREE.Texture) => {
-          const im = t.image as HTMLImageElement;
+          const im = t.image as ImageBitmap;
           return im.width / im.height;
         };
         const material = new THREE.ShaderMaterial({
@@ -345,6 +356,16 @@ export default function ProjectsStage({ stack, onReady }: { stack: string[]; onR
         scene.add(mesh);
         return { mesh, frontAspect: aspect(front), backAspect: aspect(poster), posterTex: poster, artTex: artTex[SLOT[k]], wantPlay: false };
       });
+      // Boot in small steps instead of one long task: shaders compile in parallel where the GPU driver allows
+      // (compileAsync), and each texture is uploaded in its own task, so the page keeps painting frames meanwhile.
+      const yieldTask = () => new Promise((r) => setTimeout(r, 0));
+      await renderer.compileAsync(scene, camera);
+      for (const t of [...frontTex, ...posterTex, ...artTex]) {
+        if (disposed) return;
+        renderer.initTexture(t);
+        await yieldTask();
+      }
+      if (disposed) return;
       render(0);
       onReady({
         render,
