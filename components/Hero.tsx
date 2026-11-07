@@ -25,6 +25,14 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
   const cards = useRef<HTMLDivElement>(null);
   const [fx, setFx] = useState(false); // displacement started (first pointer move)
   const [fxReady, setFxReady] = useState(false); // its first frame is up: hide the DOM cards
+  const [atTop, setAtTop] = useState(true); // the pile link only works while the hero is on screen, not once it is the carousel
+
+  useEffect(() => {
+    const onScroll = () => setAtTop(window.scrollY < 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const el = root.current!;
@@ -94,6 +102,12 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
             <img src="/hero.webp" alt="Vaibhav Tomar" className="h-full w-full object-cover" />
           </div>
         </div>
+        <a
+          href="/gallery"
+          aria-label="Open the photo gallery"
+          tabIndex={atTop && play ? 0 : -1}
+          className={`${STACK_CARD} ${CARD_CLASS} z-20 outline-offset-8 focus-visible:outline-2 ${atTop && play ? "" : "pointer-events-none"}`}
+        />
         {fx && <Displacement host={root} paint={paintPile} onReady={() => setFxReady(true)} grid={40} threshold={300} strength={0.15} scramble={0} />}
       </div>
 
