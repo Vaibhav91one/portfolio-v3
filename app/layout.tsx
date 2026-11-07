@@ -4,8 +4,7 @@ import { SITE_URL } from "@/lib/site";
 
 const title = "Vaibhav Tomar — Design Engineer & Software Developer";
 const description =
-  "Vaibhav Tomar is a design engineer and software developer in India, building fast, playful web experiences with Next.js, React and GSAP. See projects and get in touch.";
-const OG = "/assets/Images/opengraph.jpg";
+  "Vaibhav Tomar is a design engineer and software developer in India, crafting playful, minimal and functional web experiences where design meets code. Also a cybersecurity researcher and freelancer.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -18,16 +17,16 @@ export const metadata: Metadata = {
       { url: "/icon-96.png", type: "image/png", sizes: "96x96" }, // square raster, multiple of 48px, for Google's favicon crawler
     ],
   },
-  keywords: ["Vaibhav Tomar", "Vaibhav91one", "Design Engineer", "Software Developer", "Frontend Developer", "Next.js", "React", "GSAP", "Portfolio"],
+  keywords: ["Vaibhav Tomar", "Vaibhav91one", "Design Engineer", "Software Developer", "Frontend Developer", "Cybersecurity Researcher", "Freelance", "Next.js", "React", "GSAP", "Portfolio"],
   authors: [{ name: "Vaibhav Tomar", url: SITE_URL }],
-  twitter: { card: "summary_large_image", title, description, creator: "@VrsatileVaibhav", images: [OG] },
+  // share images: app/opengraph-image.jpg + app/twitter-image.jpg (file convention, a screenshot of the hero)
+  twitter: { card: "summary_large_image", title, description, creator: "@VrsatileVaibhav" },
   openGraph: {
     type: "profile",
     url: "/",
     siteName: "Vaibhav Tomar",
     title,
     description,
-    images: [{ url: OG, width: 2400, height: 1260, alt: "Vaibhav Tomar — Design Engineer & Software Developer" }],
   },
 };
 
@@ -43,10 +42,10 @@ const jsonLd = {
       alternateName: ["Vaibhav91one", "VrsatileVaibhav"],
       description,
       url: SITE_URL,
-      image: `${SITE_URL}${OG}`,
+      image: `${SITE_URL}/hero.webp`,
       email: "mailto:vaibhavtomar3003@gmail.com",
-      jobTitle: ["Design Engineer", "Software Developer"],
-      knowsAbout: ["Web development", "Next.js", "React", "GSAP", "Three.js", "UI design", "Motion design"],
+      jobTitle: ["Design Engineer", "Software Developer", "Cybersecurity Researcher", "Freelancer"],
+      knowsAbout: ["Web development", "Next.js", "React", "GSAP", "Three.js", "UI design", "Motion design", "Cybersecurity"],
       worksFor: { "@type": "Organization", name: "Jio Platforms Limited" },
       address: { "@type": "PostalAddress", addressCountry: "IN" },
       sameAs: ["https://github.com/Vaibhav91one", "https://www.linkedin.com/in/vaibhavtomar91/", "https://x.com/VrsatileVaibhav"],
