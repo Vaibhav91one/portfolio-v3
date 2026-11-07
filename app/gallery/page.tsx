@@ -3,10 +3,16 @@ import Link from "next/link";
 import GalleryGrid from "@/components/GalleryGrid";
 import { RollButton } from "@/components/RollButton";
 
+const title = "Gallery — Vaibhav Tomar";
+const description = "Photos by Vaibhav Tomar: an endless grid to drag around, each photo framed with a note beside it.";
+
+// openGraph/twitter set here too, else the share card keeps the home page's title and url (the images come from app/opengraph-image.jpg)
 export const metadata: Metadata = {
-  title: "Gallery — Vaibhav Tomar",
-  description: "Photos by Vaibhav Tomar: an endless grid to drag around, each photo framed with a note beside it.",
+  title,
+  description,
   alternates: { canonical: "/gallery" },
+  openGraph: { type: "website", url: "/gallery", siteName: "Vaibhav Tomar", title, description },
+  twitter: { card: "summary_large_image", title, description, creator: "@VrsatileVaibhav" },
 };
 
 export default function GalleryPage() {
