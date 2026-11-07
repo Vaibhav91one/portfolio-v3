@@ -3,6 +3,11 @@
 export const CARD_CLASS = "w-[28vw] h-[min(35vw,74vh)]";
 export const STACK_CARD = "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden";
 
+/** Photos (preloader trail, pile, hero) ship as <name>.webp plus a 360px-wide <name>-360.webp for phones. Preloader and
+ *  Hero use the same srcset/sizes, so the trail image and its pile card pick the same file and the hand-off stays identical. */
+export const PHOTO_SIZES = "30vw";
+export const photoSrcSet = (src: string) => `${src.replace(/\.webp$/, "-360.webp")} 360w, ${src} 1100w`;
+
 /** Card size in px for a viewport, matching CARD_CLASS. */
 export const cardSize = (w: number, h: number) => ({ w: w * 0.28, h: Math.min(w * 0.35, h * 0.74) });
 

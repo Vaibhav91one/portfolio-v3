@@ -60,13 +60,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className="h-full antialiased"
-      suppressHydrationWarning // the boot script below sets data-boot before React runs
+      suppressHydrationWarning // the boot script below sets data-boot / data-seen before React runs
     >
       <head>
-        {/* reloaded while the page was dark: paint dark from the very first frame instead of flashing paper */}
+        {/* reloaded while the page was dark: paint dark from the very first frame instead of flashing paper; intro already played this session: hide the preloader */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(sessionStorage.getItem("pv3-dark")==="1")document.documentElement.dataset.boot="dark"}catch(e){}`,
+            __html: `try{var d=document.documentElement;if(sessionStorage.getItem("pv3-dark")==="1")d.dataset.boot="dark";if(sessionStorage.getItem("pv3-intro-2"))d.dataset.seen="1"}catch(e){}`,
           }}
         />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />

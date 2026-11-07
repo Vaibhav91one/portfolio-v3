@@ -9,7 +9,7 @@ import NameMarquee from "./NameMarquee";
 import Nav from "./Nav";
 import PixelSky from "./PixelSky";
 import type { Paint } from "./Displacement";
-import { CARD_CLASS, HERO_POSE, POSES, STACK_CARD, poseTransform } from "./stack";
+import { CARD_CLASS, HERO_POSE, PHOTO_SIZES, POSES, STACK_CARD, photoSrcSet, poseTransform } from "./stack";
 
 // WebGL, pointer-only: its code loads on the first mouse move over the hero, so none of it runs during page load
 const Displacement = dynamic(() => import("./Displacement"), { ssr: false });
@@ -83,16 +83,20 @@ export default function Hero({ play, stack }: { play: boolean; stack: string[] }
       {/* photo pile */}
       <div data-pile className="absolute inset-0 z-10" style={vis}>
         <div ref={cards} className={`absolute inset-0 ${fxReady ? "invisible" : ""}`}>
-          {stack.map((src, i) => (
+          {/* only once the intro hands over (play): before that they'd be fetched behind the preloader, and on a phone the
+              default pile isn't even in its trail. By then the preloader has loaded these exact files. */}
+          {play && stack.map((src, i) => (
             <div key={src} className={`${STACK_CARD} ${CARD_CLASS}`} style={{ transform: poseTransform(POSES[i]), zIndex: i + 1 }}>
               {/* eslint-disable-next-line @next/next/no-img-element -- must be pixel-identical to the Preloader's cards */}
-              <img src={src} alt="" className="h-full w-full object-cover" />
+              <img src={src} srcSet={photoSrcSet(src)} sizes={PHOTO_SIZES} alt="" className="h-full w-full object-cover" />
             </div>
           ))}
-          <div className={`${STACK_CARD} ${CARD_CLASS}`} style={{ transform: poseTransform(HERO_POSE), zIndex: 10 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- must be pixel-identical to the Preloader's hero card */}
-            <img src="/hero.webp" alt="Vaibhav Tomar" className="h-full w-full object-cover" />
-          </div>
+          {play && (
+            <div className={`${STACK_CARD} ${CARD_CLASS}`} style={{ transform: poseTransform(HERO_POSE), zIndex: 10 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- must be pixel-identical to the Preloader's hero card */}
+              <img src="/hero.webp" srcSet={photoSrcSet("/hero.webp")} sizes={PHOTO_SIZES} alt="Vaibhav Tomar" className="h-full w-full object-cover" />
+            </div>
+          )}
         </div>
         {fx && <Displacement host={root} paint={paintPile} onReady={() => setFxReady(true)} grid={40} threshold={300} strength={0.15} scramble={0} />}
       </div>
