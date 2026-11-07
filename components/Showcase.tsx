@@ -220,7 +220,9 @@ export default function Showcase({ play, stack }: { play: boolean; stack: string
         <Suspense>
           <Asterisk play={play} box={ast} spin={spin} />
         </Suspense>
-        <Hero play={play} stack={stack} />
+        <Suspense>
+          <Hero play={play} stack={stack} />
+        </Suspense>
         {play && <ProjectsStage stack={stack} onReady={setApi} />}
         <Suspense>
           <Roles box={roles} bio={bio} tags={tags} />
